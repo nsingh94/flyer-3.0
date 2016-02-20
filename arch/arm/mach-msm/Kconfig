@@ -2327,4 +2327,8 @@ config MICROP_COMMON
 	help
 	  HTC Microp-P support.
 
+config TIMING_PCLK_53M
+    bool "Set PCLK to 53.5MHz"
+    default n
+
 endif
