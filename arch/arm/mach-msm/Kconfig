@@ -2320,4 +2320,11 @@ config HTC_ACCESSORY_ONEWIRE
         default n
         help
           Provides support of HTC one wire protocol driver.
+
+config MICROP_COMMON
+	tristate "MICROP COMMON Driver"
+	depends on I2C
+	help
+	  HTC Microp-P support.
+
 endif

@@ -17,8 +17,10 @@ endif
 	endif
 endif
 
+obj-y += drv_callback.o
 obj-y += acpuclock.o
 obj-y += radio_feedback.o
+
 obj-$(CONFIG_ARCH_MSM7X01A) += acpuclock-7201.o
 obj-$(CONFIG_ARCH_MSM7X25) += acpuclock-7201.o
 obj-$(CONFIG_ARCH_MSM7X27) += acpuclock-7201.o
@@ -425,8 +427,11 @@ obj-$(CONFIG_MACH_RUNNYMEDE)+= board-runnymede-keypad.o
 obj-$(CONFIG_MACH_RUNNYMEDE) += display/runnymede-panel.o board-runnymede-audio.o
 obj-$(CONFIG_MACH_RUNNYMEDE)+= board-runnymede-mmc.o board-runnymede-wifi.o
 obj-$(CONFIG_MACH_RUNNYMEDE) += board-runnymede-rfkill.o htc_bdaddress.o
-obj-$(CONFIG_MACH_FLYER) += board-flyer.o
-obj-$(CONFIG_MACH_FLYER) += display/flyer-panel.o board-flyer-audio.o
+obj-$(CONFIG_MACH_FLYER) += board-flyer.o 
+obj-$(CONFIG_MACH_FLYER) += board-flyer-microp.o board-flyer-rfkill.o
+obj-$(CONFIG_MACH_FLYER) += board-flyer-keypad.o board-flyer-audio.o
+obj-$(CONFIG_MACH_FLYER) += board-flyer-mmc.o board-flyer-wifi.o
+obj-$(CONFIG_MACH_FLYER) += display/flyer-panel.o
 obj-$(CONFIG_MACH_FLYER) += htc_bdaddress.o
 obj-$(CONFIG_MACH_VIVO) += board-vivo.o
 obj-$(CONFIG_MACH_VIVO) += board-vivo-keypad.o
@@ -580,3 +585,4 @@ obj-$(CONFIG_MFD_MAX8957) += max8957_gpio.o
 obj-y += display/
 obj-$(CONFIG_MACH_PRIMOTD) += board-primotd-gps.o
 obj-$(CONFIG_HTC_ACCESSORY_ONEWIRE) += htc_onewire.o
+obj-$(CONFIG_MICROP_COMMON) += atmega_microp_common.o

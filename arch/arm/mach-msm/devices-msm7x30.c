@@ -40,6 +40,19 @@
 #include <mach/dal_axi.h>
 #include <mach/msm_memtypes.h>
 
+void config_gpio_table_dbg(uint32_t *table, int len, char *file, int line)
+{
+	int n, rc;
+	for (n = 0; n < len; n++) {
+		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
+		if (rc) {
+			pr_err("[K] %s: gpio_tlmm_config(%#x)[%d]=%d (%s:%d)\n",
+			       __func__, table[n], n, rc, file, line);
+			break;
+		}
+	}
+}
+
 /* EBI THERMAL DRIVER */
 static struct resource msm_ebi0_thermal_resources[] = {
 	{

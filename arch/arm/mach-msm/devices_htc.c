@@ -232,6 +232,32 @@ return mem_size;
 }
 __tagtable(ATAG_CAM, parse_tag_cam);
 
+/* CSA sensor calibration values */
+#define ATAG_CSA	0x5441001f
+
+unsigned int csa_kvalue1;
+EXPORT_SYMBOL(csa_kvalue1);
+
+unsigned int csa_kvalue2;
+EXPORT_SYMBOL(csa_kvalue2);
+
+unsigned int csa_kvalue3;
+EXPORT_SYMBOL(csa_kvalue3);
+
+static int __init parse_tag_csa_calibration(const struct tag *tag)
+{
+	unsigned int *ptr = (unsigned int *)&tag->u;
+	csa_kvalue1 = ptr[0];
+	csa_kvalue2 = ptr[1];
+	csa_kvalue3 = ptr[2];
+
+	printk(KERN_DEBUG "csa_kvalue1 = 0x%x, csa_kvalue2 = 0x%x, "
+	"csa_kvalue3 = 0x%x\n", csa_kvalue1, csa_kvalue2, csa_kvalue3);
+
+	return 0;
+}
+__tagtable(ATAG_CSA, parse_tag_csa_calibration);
+
 /* Gyro/G-senosr calibration values */
 #define ATAG_GRYO_GSENSOR	0x54410020
 unsigned char gyro_gsensor_kvalue[37];

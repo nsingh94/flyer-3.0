@@ -303,6 +303,8 @@ struct msm_camera_sensor_info {
 	uint32_t kpi_sensor_end;
 	uint8_t (*preview_skip_frame)(void);
 #endif
+	int sensor_lc_disable; /* S5K4E1GX: for sensor lens correction support */
+	int zero_shutter_mode; /* S5K4E1GX: for doing zero shutter lag on MIPI */
 };
 
 int  msm_get_cam_resources(struct msm_camera_sensor_info *);
