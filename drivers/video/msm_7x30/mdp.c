@@ -790,7 +790,7 @@ void mdp_pipe_kickoff(struct mdp_info *mdp, uint32_t term)
 		mdp_lut_enable(mdp);
 		mdp_writel(mdp, 0, 0x0008);
 	}
-,}
+}
 
 int mdp_start_histogram(struct mdp_device *mdp_dev, struct fb_info *info)
 {
