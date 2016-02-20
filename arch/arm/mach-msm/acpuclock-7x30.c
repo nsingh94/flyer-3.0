@@ -472,6 +472,9 @@ void __init pll2_fixup(void)
 
 	pr_err("Unknown PLL2 lval %d\n", pll2_l);
 	BUG();
+#ifdef CONFIG_MSM7X30_DDR2
+	speed->axi_clk_hz = UINT_MAX;
+#endif
 }
 
 #define RPM_BYPASS_MASK	(1 << 3)

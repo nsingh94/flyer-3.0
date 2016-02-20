@@ -2331,4 +2331,9 @@ config TIMING_PCLK_53M
     bool "Set PCLK to 53.5MHz"
     default n
 
+config MSM7X30_DDR2
+	bool "Request max ebi1 at max cpu frequency"
+	depends on ARCH_MSM7X30
+	default n
+
 endif
