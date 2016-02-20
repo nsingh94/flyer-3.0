@@ -121,4 +121,10 @@ config CODEC_AIC3008
 	help
 	  AIC3008 Driver implemented by HTC.
 
+config SENSORS_CAPSENSE
+	tristate "CapSense Driver"
+	depends on I2C
+	help
+	 CapSense Driver implemented by HTC.
+
 endmenu
