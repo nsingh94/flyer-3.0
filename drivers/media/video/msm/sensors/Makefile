@@ -11,12 +11,14 @@ obj-$(CONFIG_S5K3H2YX) += s5k3h2yx.o
 endif
 obj-$(CONFIG_S5K6A1GX) += s5k6a1gx_v4l2.o
 obj-$(CONFIG_S5K6AAFX) += s5k6aafx.o
+obj-$(CONFIG_S5K4E1GX) += s5k4e1gx.o
 obj-$(CONFIG_OV8830) += ov8830.o
 obj-$(CONFIG_MT9D015) += mt9d015.o
 obj-$(CONFIG_OV2720) += ov2720.o
 obj-$(CONFIG_SP3D) += sp3d.o
 obj-$(CONFIG_QS_S5K4E1) += qs_s5k4e1.o
 
+obj-$(CONFIG_MACH_FLYER) += s5k4e1gx_reg_flyer.o s5k6aafx_reg_flyer.o s5k6aafx_reg_flyer_cob.o
 obj-$(CONFIG_MACH_HOLIDAY) += s5k3h2yx_reg_holiday.o s5k6aafx_reg_holiday.o s5k6aafx_reg_holiday_cob.o
 obj-$(CONFIG_MACH_VIGOR) += s5k3h2yx_reg_vigor.o ov8830_reg_vigor.o mt9d015_reg_vigor.o
 obj-$(CONFIG_MACH_RUBY) += s5k3h2yx_reg_holiday.o mt9d015_reg_vigor.o
