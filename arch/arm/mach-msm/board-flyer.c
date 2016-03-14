@@ -3455,20 +3455,9 @@ static int is_support_super_charger(void)
 	return TRUE;
 }
 
-enum batt_ctl_t htc_flyer_fake_charger_for_testing(enum batt_ctl_t ctl)
-{
-	enum batt_ctl_t new_ctl = ENABLE_SUPER_CHG;
-
-	pr_info("batt: %s(%d -> %d)\n", __func__, ctl , new_ctl);
-	return new_ctl;
-}
-
 static int flyer_battery_charging_ctrl(enum batt_ctl_t ctl)
 {
 	int result = 0;
-
-	if (get_kernel_flag() & KERNEL_FLAG_ENABLE_FAST_CHARGE)
-		ctl = htc_flyer_fake_charger_for_testing(ctl);
 
 	switch (ctl) {
 	case DISABLE:
@@ -3497,15 +3486,15 @@ static int flyer_battery_charging_ctrl(enum batt_ctl_t ctl)
 		}
 		break;
 	case ENABLE_FAST_CHG:
-		pr_info("batt: flyer charger ON (FAST)\n");
+		pr_info("batt: flyer charger ON (SUPER)\n");
 		if (system_rev >= XC) {
 			result = gpio_direction_output(FLYER_GPIO_ISET_XC, 1);
 			result = gpio_direction_output(FLYER_GPIO_MCHG_EN_N_XC, 0);
-			gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_ADP_9V), 0);
+			gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_ADP_9V), 1);
 		} else {
 			result = gpio_direction_output(FLYER_GPIO_ISET, 1);
 			result = gpio_direction_output(FLYER_GPIO_MCHG_EN_N, 0);
-			result = gpio_direction_output(FLYER_GPIO_ADP_9V, 0);
+			result = gpio_direction_output(FLYER_GPIO_ADP_9V, 1);
 		}
 		break;
 	case ENABLE_SUPER_CHG:
