@@ -53,6 +53,8 @@ enum {
 int spi_display_send_16bit(unsigned char id, unsigned data);
 int spi_display_send_9bit(struct spi_msg *msg);
 
+extern unsigned long msm_fb_base;
+
 #define LCM_GPIO_CFG(gpio, func) \
 PCOM_GPIO_CFG(gpio, func, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_4MA)
 static DEFINE_MUTEX(panel_lock);
@@ -968,8 +970,6 @@ static struct msm_lcdc_timing flyer_lg_timing = {
 
 static struct resource resources_msm_fb[] = {
 	{
-		.start = MSM_FB_BASE,
-		.end = MSM_FB_BASE + MSM_FB_SIZE - 1,
 		.flags = IORESOURCE_MEM,
 	},
 };
@@ -1089,6 +1089,9 @@ int __init flyer_init_panel(void)
 	}
 #endif
 	mdp_pdata.overrides = MSM_MDP_ABL_ENABLE;
+
+	resources_msm_fb[0].start = msm_fb_base;
+	resources_msm_fb[0].end = msm_fb_base + MSM_FB_SIZE - 1;
 
 	if (panel_type == PANEL_ID_FLR_LG_WS2)
 		mdp_pdata.abl_gamma_tbl = &lg_ws2_gamma_tbl;
