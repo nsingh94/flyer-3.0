@@ -1091,7 +1091,7 @@ int __init flyer_init_panel(void)
 	mdp_pdata.overrides = MSM_MDP_ABL_ENABLE;
 
 	resources_msm_fb[0].start = msm_fb_base;
-	resources_msm_fb[0].end = msm_fb_base + MSM_FB_SIZE - 1;
+	resources_msm_fb[0].end = msm_fb_base + MSM_FB_SIZE;
 
 	if (panel_type == PANEL_ID_FLR_LG_WS2)
 		mdp_pdata.abl_gamma_tbl = &lg_ws2_gamma_tbl;
