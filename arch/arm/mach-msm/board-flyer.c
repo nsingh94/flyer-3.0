@@ -3148,13 +3148,6 @@ static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.memory_type = MEMTYPE_EBI1,
 };
 
-static struct android_pmem_platform_data android_pmem_adsp2_pdata = {
-	.name = "pmem_adsp2",
-	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-	.cached = 0,
-	.memory_type = MEMTYPE_EBI1,
-};
-
 static struct android_pmem_platform_data android_pmem_audio_pdata = {
        .name = "pmem_audio",
        .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
@@ -3168,15 +3161,9 @@ static struct platform_device android_pmem_adsp_device = {
        .dev = { .platform_data = &android_pmem_adsp_pdata },
 };
 
-static struct platform_device android_pmem_adsp2_device = {
-	.name = "android_pmem",
-	.id = 3,
-	.dev = { .platform_data = &android_pmem_adsp2_pdata },
-};
-
 static struct platform_device android_pmem_audio_device = {
        .name = "android_pmem",
-       .id = 4,
+       .id = 3,
        .dev = { .platform_data = &android_pmem_audio_pdata },
 };
 
@@ -3839,7 +3826,6 @@ static struct platform_device *devices[] __initdata = {
         &msm_rotator_device,
 #endif
         &android_pmem_adsp_device,
-        &android_pmem_adsp2_device,
         &android_pmem_audio_device,
         &msm_device_i2c,
         &msm_device_i2c_2,
@@ -4261,7 +4247,7 @@ static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
 {
 	return (unsigned int)
 		!gpio_get_value_cansleep(
-			PM8058_GPIO_PM_TO_SYS(FLYER_GPIO_SDMC_CD_N));
+			PM8058_GPIO_PM_TO_SYS(FLYER_SDMC_CD_N));
 }
 #endif
 #endif
@@ -4326,7 +4312,7 @@ static struct mmc_platform_data msm7x30_sdc4_data = {
 
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 	.status      = msm7x30_sdcc_slot_status,
-	.status_irq  = PM8058_GPIO_IRQ(PMIC8058_IRQ_BASE, FLYER_GPIO_SDMC_CD_N),
+	.status_irq  = PM8058_GPIO_IRQ(PMIC8058_IRQ_BASE, FLYER_SDMC_CD_N),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 #endif
 
@@ -4745,14 +4731,6 @@ static int __init pmem_adsp_size_setup(char *p)
 }
 early_param("pmem_adsp_size", pmem_adsp_size_setup);
 
-static unsigned pmem_adsp2_size = MSM_PMEM_ADSP2_SIZE;
-static int __init pmem_adsp2_size_setup(char *p)
-{
-	pmem_adsp2_size = memparse(p, NULL);
-	return 0;
-}
-early_param("pmem_adsp2_size", pmem_adsp2_size_setup);
-
 static unsigned pmem_audio_size = MSM_PMEM_AUDIO_SIZE;
 static int __init pmem_audio_size_setup(char *p)
 {
@@ -4788,7 +4766,6 @@ static void __init size_pmem_devices(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
 	size_pmem_device(&android_pmem_adsp_pdata, 0, pmem_adsp_size);
-	size_pmem_device(&android_pmem_adsp2_pdata, 0, pmem_adsp2_size);
 	size_pmem_device(&android_pmem_audio_pdata, 0, pmem_audio_size);
 	size_pmem_device(&android_pmem_pdata, 0, pmem_sf_size);
 	msm7x30_reserve_table[MEMTYPE_EBI1].size += PMEM_KERNEL_EBI1_SIZE;
@@ -4807,7 +4784,6 @@ static void __init reserve_pmem_memory(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
 	reserve_memory_for(&android_pmem_adsp_pdata);
-	reserve_memory_for(&android_pmem_adsp2_pdata);
 	reserve_memory_for(&android_pmem_audio_pdata);
 	reserve_memory_for(&android_pmem_pdata);
 #endif

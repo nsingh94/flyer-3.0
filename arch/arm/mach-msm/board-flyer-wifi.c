@@ -89,11 +89,7 @@ static struct resource flyer_wifi_resources[] = {
 		.name		= "bcm4329_wlan_irq",
 		.start		= MSM_GPIO_TO_INT(FLYER_GPIO_WIFI_IRQ),
 		.end		= MSM_GPIO_TO_INT(FLYER_GPIO_WIFI_IRQ),
-#ifdef HW_OOB
-		.flags      = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL | IORESOURCE_IRQ_SHAREABLE,
-#else
 		.flags      = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHEDGE,
-#endif
 	},
 };
 
@@ -144,58 +140,6 @@ static unsigned flyer_wifi_update_nvs(char *str)
 	memcpy(ptr + NVS_LEN_OFFSET, &len, sizeof(len));
 	return 0;
 }
-
-#ifdef HW_OOB
-static unsigned strip_nvs_param(char *param)
-{
-	unsigned char *nvs_data;
-
-	unsigned param_len;
-	int start_idx, end_idx;
-
-	unsigned char *ptr;
-	unsigned len;
-
-	if (!param)
-		return -EINVAL;
-	ptr = get_wifi_nvs_ram();
-	/* Size in format LE assumed */
-	memcpy(&len, ptr + NVS_LEN_OFFSET, sizeof(len));
-
-	/* the last bye in NVRAM is 0, trim it */
-	if (ptr[NVS_DATA_OFFSET + len - 1] == 0)
-		len -= 1;
-
-	nvs_data = ptr + NVS_DATA_OFFSET;
-
-	param_len = strlen(param);
-
-	/* search param */
-	for (start_idx = 0; start_idx < len - param_len; start_idx++) {
-		if (memcmp(&nvs_data[start_idx], param, param_len) == 0)
-			break;
-	}
-
-	end_idx = 0;
-	if (start_idx < len - param_len) {
-		/* search end-of-line */
-		for (end_idx = start_idx + param_len; end_idx < len; end_idx++) {
-			if (nvs_data[end_idx] == '\n' || nvs_data[end_idx] == 0)
-				break;
-		}
-	}
-
-	if (start_idx < end_idx) {
-		/* move the remain data forward */
-		for (; end_idx + 1 < len; start_idx++, end_idx++)
-			nvs_data[start_idx] = nvs_data[end_idx+1];
-
-		len = len - (end_idx - start_idx + 1);
-		memcpy(ptr + NVS_LEN_OFFSET, &len, sizeof(len));
-	}
-	return 0;
-}
-#endif
 
 #define WIFI_MAC_PARAM_STR     "macaddr="
 #define WIFI_MAX_MAC_LEN       17 /* XX:XX:XX:XX:XX:XX */
@@ -272,11 +216,8 @@ int __init flyer_wifi_init(void)
 	int ret;
 
 	printk(KERN_INFO "%s: start\n", __func__);
-#ifdef HW_OOB
-	strip_nvs_param("sd_oobonly");
-#else
 	flyer_wifi_update_nvs("sd_oobonly=1\n");
-#endif
+	flyer_wifi_update_nvs("btc_params80=0\n");
 	flyer_wifi_update_nvs("btc_params6=30\n");
 	flyer_init_wifi_mem();
 	ret = platform_device_register(&flyer_wifi_device);
