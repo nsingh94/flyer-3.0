@@ -30,7 +30,7 @@
 #include <linux/mutex.h>
 #include <linux/timer.h>
 #include <linux/remote_spinlock.h>
-#include <linux/pm_qos_params.h>
+#include <linux/pm_qos.h>
 #include <mach/gpio.h>
 
 
@@ -92,7 +92,7 @@ struct msm_i2c_dev {
 	int                          clk_state;
 	void                         *complete;
 
-	struct pm_qos_request_list pm_qos_req;
+	struct pm_qos_request pm_qos_req;
 
 	int                          last_addr;
 	int                          reg;

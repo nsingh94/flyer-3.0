@@ -20,7 +20,7 @@
 #define __ASM_ARCH_MSM_HSUSB_H
 
 #include <linux/types.h>
-#include <linux/pm_qos_params.h>
+#include <linux/pm_qos.h>
 
 #define PHY_TYPE_MASK		0x0F
 #define PHY_TYPE_MODE		0xF0
@@ -176,7 +176,7 @@ struct msm_otg_platform_data {
 	/* 1 : uart, 0 : usb */
 	void (*usb_uart_switch)(int);
 
-	struct pm_qos_request_list pm_qos_req_dma;
+	struct pm_qos_request pm_qos_req_dma;
 };
 
 struct msm_usb_host_platform_data {
