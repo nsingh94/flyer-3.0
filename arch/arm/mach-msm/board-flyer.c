@@ -774,20 +774,20 @@ static int pm8058_gpios_init(void)
 		},
 	};
 	
-	struct pm8xxx_gpio_init_info sdmc_cn_n = {
+#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
+	struct pm8xxx_gpio_init_info sdcc_det = {
 		PM8058_GPIO_PM_TO_SYS(FLYER_SDMC_CD_N),
 		{
 			.direction      = PM_GPIO_DIR_IN,
-			.output_buffer  = 0,
-			.output_value   = 0,
 			.pull           = PM_GPIO_PULL_UP_31P5,
 			.vin_sel        = PM8058_GPIO_VIN_L5,
-			.out_strength   = 0,
 			.function       = PM_GPIO_FUNC_NORMAL,
 			.inv_int_pol    = 0,
 		},
 	};
-	
+#endif
+
+/*
 	struct pm8xxx_gpio_init_info vol_up = {
 		PM8058_GPIO_PM_TO_SYS(FLYER_VOL_UP),
 		{
@@ -815,9 +815,10 @@ static int pm8058_gpios_init(void)
 			.inv_int_pol    = 0,
 		},
 	};
+*/
 	
-	struct pm8xxx_gpio_init_info aud_hp_detz = {
-		PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz), //Headset I think
+	struct pm8xxx_gpio_init_info headset = {
+		PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz),
 		{
 			.direction      = PM_GPIO_DIR_IN,
 			.output_buffer  = 0,
@@ -944,13 +945,16 @@ if (system_rev >= 2) {
 	} else
 	  printk(KERN_ERR "%s TP_RSTz config ok\n", __func__);
 
-	rc = pm8xxx_gpio_config(sdmc_cn_n.gpio, &sdmc_cn_n.config); // 3
+#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
+	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config); // 3
 	if (rc) {
 		printk(KERN_ERR "%s SDMC_CD_N config failed\n", __func__);
 		return rc;
 	} else
 	  printk(KERN_ERR "%s SDMC_CD_N config ok\n", __func__);
+#endif
 
+/*
 	rc = pm8xxx_gpio_config(vol_up.gpio, &vol_up.config); // 4
 	if (rc) {
 		printk(KERN_ERR "%s VOL_UP config failed\n", __func__);
@@ -964,8 +968,9 @@ if (system_rev >= 2) {
 		return rc;
 	} else
 	  printk(KERN_ERR "%s VOL_DN config ok\n", __func__);
+*/
 
-	rc = pm8xxx_gpio_config(aud_hp_detz.gpio, &aud_hp_detz.config); // 6
+	rc = pm8xxx_gpio_config(headset.gpio, &headset.config); // 6
 	if (rc) {
 		printk(KERN_ERR "%s AUD_HP_DETz config failed\n", __func__);
 		return rc;
