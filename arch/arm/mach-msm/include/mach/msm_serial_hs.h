@@ -33,6 +33,11 @@ struct msm_serial_hs_platform_data {
 	unsigned char bt_wakeup_pin_supported;
 	unsigned char bt_wakeup_pin;	/* Device to Chip */
 	unsigned char host_wakeup_pin;	/* Chip to Device */
+
+#ifdef CONFIG_SERIAL_BCM_BT_LPM
+        void (*exit_lpm_cb)(struct uart_port *);
+#endif
+
 };
 #if 1		//Add by evan.xu@2012-02-02
 /* API for TI_ST */
@@ -46,6 +51,10 @@ extern void imc_msm_hs_request_clock_on(struct uart_port *uport);
 unsigned int msm_hs_tx_empty(struct uart_port *uport);
 void msm_hs_request_clock_off(struct uart_port *uport);
 void msm_hs_request_clock_on(struct uart_port *uport);
+
+void msm_hs_request_clock_off_locked(struct uart_port *uport);
+void msm_hs_request_clock_on_locked(struct uart_port *uport);
+
 void msm_hs_set_mctrl(struct uart_port *uport,
 				    unsigned int mctrl);
 #endif
