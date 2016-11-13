@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2011, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2008-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -44,10 +44,6 @@
 #define KGSL_PAGETABLE_ENTRIES(_sz) (((_sz) >> PAGE_SHIFT) + \
 				     KGSL_PT_EXTRA_ENTRIES)
 
-#define KGSL_PAGETABLE_SIZE \
-ALIGN(KGSL_PAGETABLE_ENTRIES(CONFIG_MSM_KGSL_PAGE_TABLE_SIZE) * \
-KGSL_PAGETABLE_ENTRY_SIZE, PAGE_SIZE)
-
 #ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
 #define KGSL_PAGETABLE_COUNT (CONFIG_MSM_KGSL_PAGE_TABLE_COUNT)
 #else
@@ -66,6 +62,7 @@ KGSL_PAGETABLE_ENTRY_SIZE, PAGE_SIZE)
 	do { _stat += (_size); if (_stat > _max) _max = _stat; } while (0)
 
 struct kgsl_device;
+struct kgsl_context;
 
 struct kgsl_driver {
 	struct cdev cdev;
@@ -95,8 +92,6 @@ struct kgsl_driver {
 	struct {
 		unsigned int vmalloc;
 		unsigned int vmalloc_max;
-		unsigned int page_alloc;
-		unsigned int page_alloc_max;
 		unsigned int coherent;
 		unsigned int coherent_max;
 		unsigned int mapped;
@@ -163,6 +158,9 @@ struct kgsl_mem_entry *kgsl_sharedmem_find_region(
 	struct kgsl_process_private *private, unsigned int gpuaddr,
 	size_t size);
 
+void kgsl_cancel_events_ctxt(struct kgsl_device *device,
+	struct kgsl_context *context);
+
 extern const struct dev_pm_ops kgsl_pm_ops;
 
 struct early_suspend;
@@ -208,14 +206,13 @@ static inline void *kgsl_memdesc_map(struct kgsl_memdesc *memdesc)
 static inline uint8_t *kgsl_gpuaddr_to_vaddr(struct kgsl_memdesc *memdesc,
 					     unsigned int gpuaddr)
 {
-	if (memdesc->gpuaddr == 0 ||
-		gpuaddr < memdesc->gpuaddr ||
-		gpuaddr >= (memdesc->gpuaddr + memdesc->size) ||
-		(NULL == memdesc->hostptr && memdesc->ops->map_kernel_mem &&
-			memdesc->ops->map_kernel_mem(memdesc)))
-			return NULL;
+	void *hostptr = NULL;
 
-	return memdesc->hostptr + (gpuaddr - memdesc->gpuaddr);
+	if ((gpuaddr >= memdesc->gpuaddr) &&
+		(gpuaddr < (memdesc->gpuaddr + memdesc->size)))
+		hostptr = kgsl_memdesc_map(memdesc);
+
+	return hostptr != NULL ? hostptr + (gpuaddr - memdesc->gpuaddr) : NULL;
 }
 
 static inline int timestamp_cmp(unsigned int a, unsigned int b)
@@ -249,5 +246,11 @@ kgsl_mem_entry_put(struct kgsl_mem_entry *entry)
 {
 	kref_put(&entry->refcount, kgsl_mem_entry_destroy);
 }
+int kgsl_add_event(struct kgsl_device *device, u32 ts,
+	void (*cb)(struct kgsl_device *, void *, u32), void *priv,
+	void *owner);
+
+void kgsl_cancel_events(struct kgsl_device *device,
+	void *owner);
 
 #endif /* __KGSL_H */
