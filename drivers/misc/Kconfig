@@ -677,10 +677,6 @@ config CABLE_DETECT_ACCESSORY
         boolean "CABLE ACCESSORY DETECT"
         default n
 
-config CABLE_DETECT_ACCESSORY_BY_ADC
-        boolean "DETECT ACCESSORY BY PMIC ADC"
-        default n
-
 config CABLE_DETECT_GPIO_DOCK
         boolean "CABLE_DETECT_GPIO_DOCK"
         depends on CABLE_DETECT_8960

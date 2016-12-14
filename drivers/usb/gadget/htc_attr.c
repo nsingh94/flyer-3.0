@@ -33,7 +33,6 @@ enum {
 	USB_FUNCTION_MODEM_MDM, /* 14 */
 	USB_FUNCTION_MTP36,
 	USB_FUNCTION_USBNET,
-	USB_FUNCTION_AUTOBOT = 30,
 	USB_FUNCTION_RNDIS_IPT = 31,
 };
 
@@ -211,6 +210,7 @@ static unsigned int htc_usb_get_func_combine_value(void)
 	return val;
 }
 static DEFINE_MUTEX(function_bind_sem);
+
 int htc_usb_enable_function(char *name, int ebl)
 {
 	int i;
@@ -279,7 +279,7 @@ int android_switch_function(unsigned func)
 	struct android_usb_function **functions = dev->functions;
 	struct android_usb_function *f;
 	struct android_usb_product *product;
-	int product_id, vendor_id, autobot_mode = 0;
+	int product_id, vendor_id;
 	unsigned val;
 
 	/* framework may try to enable adb before android_usb_init_work is done.*/
@@ -306,6 +306,7 @@ int android_switch_function(unsigned func)
 
 	INIT_LIST_HEAD(&dev->enabled_functions);
 
+	is_mtp_enabled = false;
 	while ((f = *functions++)) {
 		if ((func & (1 << USB_FUNCTION_UMS)) &&
 				!strcmp(f->name, "mass_storage"))
@@ -336,15 +337,13 @@ int android_switch_function(unsigned func)
 			func |= 1 << USB_FUNCTION_MODEM_MDM;
 #endif
 		} else if ((func & (1 << USB_FUNCTION_SERIAL)) &&
-				!strcmp(f->name, "serial")) {
-			if (func & (1 << USB_FUNCTION_AUTOBOT)
-					&& (dev->autobot_mode != 1)) {
-				autobot_mode = 1;
-			}
+				!strcmp(f->name, "serial"))
 			list_add_tail(&f->enabled_list, &dev->enabled_functions);
-		} else if ((func & (1 << USB_FUNCTION_MTP)) &&
-				!strcmp(f->name, "mtp"))
+		else if ((func & (1 << USB_FUNCTION_MTP)) &&
+				!strcmp(f->name, "mtp")) {
 			list_add_tail(&f->enabled_list, &dev->enabled_functions);
+			is_mtp_enabled = true;
+		}
 		else if ((func & (1 << USB_FUNCTION_ACCESSORY)) &&
 				!strcmp(f->name, "accessory"))
 			list_add_tail(&f->enabled_list, &dev->enabled_functions);
@@ -391,8 +390,6 @@ int android_switch_function(unsigned func)
 		vendor_id = dev->pdata->vendor_id;
 		product_id =  dev->pdata->product_id;
 	}
-
-	dev->autobot_mode = autobot_mode;
 
 	/* We need to specify the COMM class in the device descriptor
 	 * if we are using RNDIS.
@@ -447,8 +444,7 @@ void android_switch_htc_mode(void)
 	android_switch_function((1 << USB_FUNCTION_ADB) |
 				(1 << USB_FUNCTION_PROJECTOR) |
 				(1 << USB_FUNCTION_SERIAL) |
-				(1 << USB_FUNCTION_UMS) |
-				(1 << USB_FUNCTION_AUTOBOT));
+				(1 << USB_FUNCTION_UMS));
 }
 
 
@@ -627,24 +623,6 @@ static ssize_t store_usb_phy_setting(struct device *dev,
 	return otg_store_usb_phy_setting(buf, count);
 }
 
-void msm_otg_set_disable_usb(int disable_usb);
-static ssize_t store_usb_disable_setting(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	int disable_usb_function;
-	ssize_t  ret;
-
-	ret = kstrtouint(buf, 2, &disable_usb_function);
-	if (ret < 0) {
-		USB_ERR("%s: %d\n", __func__, ret);
-		return 0;
-	}
-	printk(KERN_INFO "USB_disable set by quickboot %d\n", disable_usb_function);
-	msm_otg_set_disable_usb(disable_usb_function);
-
-	return count;
-}
-
 #if (defined(CONFIG_USB_OTG) && defined(CONFIG_USB_OTG_HOST))
 void msm_otg_set_id_state(int id);
 static ssize_t store_usb_host_mode(struct device *dev,
@@ -667,7 +645,6 @@ static ssize_t store_usb_host_mode(struct device *dev,
 
 	return count;
 }
-
 static DEVICE_ATTR(host_mode, 0220,
 		NULL, store_usb_host_mode);
 #endif
@@ -683,8 +660,6 @@ static DEVICE_ATTR(dummy_usb_serial_number, 0644,
 static DEVICE_ATTR(usb_car_kit_enable, 0444, show_usb_car_kit_enable, NULL);
 static DEVICE_ATTR(usb_phy_setting, 0664,
 		show_usb_phy_setting, store_usb_phy_setting);
-static DEVICE_ATTR(usb_disable, 0664,
-		NULL, store_usb_disable_setting);
 
 static struct attribute *android_htc_usb_attributes[] = {
 	&dev_attr_usb_cable_connect.attr,
@@ -697,7 +672,6 @@ static struct attribute *android_htc_usb_attributes[] = {
 #if (defined(CONFIG_USB_OTG) && defined(CONFIG_USB_OTG_HOST))
 	&dev_attr_host_mode.attr,
 #endif
-	&dev_attr_usb_disable.attr,
 	NULL
 };
 

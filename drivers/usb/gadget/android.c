@@ -185,7 +185,6 @@ struct android_dev {
 	void (*enable_fast_charge)(bool enable);
 	bool RndisDisableMPDecision;
 	int (*match)(int product_id, int intrsharing);
-	int autobot_mode;
 };
 
 static struct class *android_class;
@@ -294,7 +293,7 @@ static void android_work(struct work_struct *data)
 #endif
 		}
 
-		if (!connect2pc && dev->connected) {
+		if (!connect2pc && dev->connected && !is_mtp_enabled) {
 			connect2pc = true;
 			switch_set_state(&cdev->sw_connect2pc, 1);
 			pr_info("set usb_connect2pc = 1\n");
@@ -313,7 +312,7 @@ static void android_work(struct work_struct *data)
 		spin_unlock_irqrestore(&cdev->lock, flags);
 	}
 
-	if (connect2pc && !dev->connected) {
+	if (connect2pc && !dev->connected && !is_mtp_enabled) {
 		connect2pc = false;
 		switch_set_state(&cdev->sw_connect2pc, 0);
 		pr_info("set usb_connect2pc = 0\n");
@@ -751,14 +750,13 @@ static int serial_function_bind_config(struct android_usb_function *f,
 {
 #if 1
 	int err = -1;
-	int i, ports, car_mode = _android_dev->autobot_mode;
+	int i, ports;
 
 	ports = serial_driver_initial(c);
 	if (ports < 0)
 		goto out;
 	for (i = 0; i < ports; i++) {
-		if ((gserial_ports[i].func_type == USB_FSER_FUNC_SERIAL) ||
-			(car_mode && gserial_ports[i].func_type == USB_FSER_FUNC_AUTOBOT)) {
+		if (gserial_ports[i].func_type == USB_FSER_FUNC_SERIAL) {
 			err = gser_bind_config(c, i);
 			if (err) {
 				pr_err("serial: bind_config failed for port %d", i);
@@ -1454,9 +1452,6 @@ static int projector_function_init(struct android_usb_function *f,
 
 static void projector_function_cleanup(struct android_usb_function *f)
 {
-
-	projector_cleanup();
-
 	if (f->config) {
 		kfree(f->config);
 		f->config = NULL;
@@ -1469,6 +1464,35 @@ static int projector_function_bind_config(struct android_usb_function *f,
 	return projector_bind_config(c);
 }
 
+static int projector_function_ctrlrequest(struct android_usb_function *f,
+						struct usb_composite_dev *cdev,
+						const struct usb_ctrlrequest *c)
+{
+	return projector_ctrlrequest(cdev, c);
+}
+
+
+static ssize_t projector_product_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, PRODUCT_NAME_MAX, "%s\n", config->product_name);
+}
+
+static DEVICE_ATTR(product, S_IRUGO | S_IWUSR, projector_product_show,
+						    NULL);
+
+static ssize_t projector_car_model_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct htcmode_protocol *config = f->config;
+	return snprintf(buf, CAR_MODEL_NAME_MAX, "%s\n", config->car_model);
+}
+
+static DEVICE_ATTR(car_model, S_IRUGO | S_IWUSR, projector_car_model_show,
+						    NULL);
 
 static ssize_t projector_width_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -1514,78 +1538,14 @@ static ssize_t projector_version_show(struct device *dev,
 static DEVICE_ATTR(version, S_IRUGO | S_IWUSR, projector_version_show,
 						    NULL);
 
-static ssize_t projector_vendor_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct android_usb_function *f = dev_get_drvdata(dev);
-	struct htcmode_protocol *config = f->config;
-	return snprintf(buf, PAGE_SIZE, "%d\n", config->vendor);
-}
-
-static DEVICE_ATTR(vendor, S_IRUGO | S_IWUSR, projector_vendor_show,
-						    NULL);
-
-static ssize_t projector_server_nonce_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct android_usb_function *f = dev_get_drvdata(dev);
-	struct htcmode_protocol *config = f->config;
-	memcpy(buf, config->nonce, HSML_SERVER_NONCE_SIZE);
-	return HSML_SERVER_NONCE_SIZE;
-}
-
-static DEVICE_ATTR(server_nonce, S_IRUGO | S_IWUSR, projector_server_nonce_show,
-						    NULL);
-
-static ssize_t projector_client_sig_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct android_usb_function *f = dev_get_drvdata(dev);
-	struct htcmode_protocol *config = f->config;
-	memcpy(buf, config->client_sig, HSML_CLIENT_SIG_SIZE);
-	return HSML_CLIENT_SIG_SIZE;
-}
-
-static DEVICE_ATTR(client_sig, S_IRUGO | S_IWUSR, projector_client_sig_show,
-						    NULL);
-
-static ssize_t projector_server_sig_store(
-		struct device *dev, struct device_attribute *attr,
-		const char *buff, size_t size)
-{
-	struct android_usb_function *f = dev_get_drvdata(dev);
-	struct htcmode_protocol *config = f->config;
-	memcpy(config->server_sig, buff, HSML_SERVER_SIG_SIZE);
-	return HSML_SERVER_SIG_SIZE;
-}
-
-static DEVICE_ATTR(server_sig, S_IWUSR, NULL,
-		projector_server_sig_store);
-
-static ssize_t projector_auth_store(
-		struct device *dev, struct device_attribute *attr,
-		const char *buff, size_t size)
-{
-	struct android_usb_function *f = dev_get_drvdata(dev);
-	struct htcmode_protocol *config = f->config;
-	memcpy(&config->auth_result, buff, sizeof(config->auth_result));
-	config->auth_in_progress = 0;
-	return sizeof(config->auth_result);
-}
-
-static DEVICE_ATTR(auth, S_IWUSR, NULL,
-		projector_auth_store);
 
 static struct device_attribute *projector_function_attributes[] = {
+	&dev_attr_product,
+	&dev_attr_car_model,
 	&dev_attr_width,
 	&dev_attr_height,
 	&dev_attr_rotation,
 	&dev_attr_version,
-	&dev_attr_vendor,
-	&dev_attr_server_nonce,
-	&dev_attr_client_sig,
-	&dev_attr_server_sig,
-	&dev_attr_auth,
 	NULL
 };
 
@@ -1595,6 +1555,7 @@ struct android_usb_function projector_function = {
 	.init		= projector_function_init,
 	.cleanup	= projector_function_cleanup,
 	.bind_config	= projector_function_bind_config,
+	.ctrlrequest = projector_function_ctrlrequest,
 	.attributes = projector_function_attributes
 };
 #endif
@@ -2277,6 +2238,26 @@ static void android_disconnect(struct usb_gadget *gadget)
 	dev->connected = 0;
 	schedule_work(&dev->work);
 	spin_unlock_irqrestore(&cdev->lock, flags);
+
+	/*android_switch_function is not called if removing usb cable. Without it, connect2pc may be blocked by is_mtp_enabled*/
+	is_mtp_enabled = false;
+}
+
+static void android_mute_disconnect(struct usb_gadget *gadget)
+{
+	struct android_dev *dev = _android_dev;
+	struct usb_composite_dev *cdev = get_gadget_data(gadget);
+	unsigned long flags;
+
+	composite_disconnect(gadget);
+
+	/*changes USB_STATE only for MTP*/
+	if (is_mtp_enabled) {
+		spin_lock_irqsave(&cdev->lock, flags);
+		dev->connected = 0;
+		schedule_work(&dev->work);
+		spin_unlock_irqrestore(&cdev->lock, flags);
+	}
 }
 
 static void android_destroy_device(struct android_dev *dev)
@@ -2422,7 +2403,6 @@ static int __init init(void)
 		return -ENOMEM;
 	}
 	dev->functions = supported_functions;
-	dev->autobot_mode = 0;
 	INIT_LIST_HEAD(&dev->enabled_functions);
 	INIT_WORK(&dev->work, android_work);
 	INIT_DELAYED_WORK(&dev->init_work, android_usb_init_work);
@@ -2449,6 +2429,7 @@ static int __init init(void)
 	/* Override composite driver functions */
 	composite_driver.setup = android_setup;
 	composite_driver.disconnect = android_disconnect;
+	composite_driver.mute_disconnect = android_mute_disconnect;
 
 	ret = platform_driver_probe(&android_platform_driver, android_probe);
 	if (ret) {

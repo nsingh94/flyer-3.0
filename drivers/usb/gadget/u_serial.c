@@ -670,10 +670,7 @@ static void gs_read_complete(struct usb_ep *ep, struct usb_request *req)
 		break;
 	case -ESHUTDOWN:
 		/* disconnect */
-		spin_lock(&port->port_lock);
-		list_add_tail(&req->list, &port->read_pool);
-		/* Implemented handling in future if needed */
-		spin_unlock(&port->port_lock);
+		printk("%s: ESHUTDOWN\n", __func__);
 		break;
 	case -ENODEV:
 		spin_lock(&port->port_lock);

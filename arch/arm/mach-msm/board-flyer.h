@@ -45,17 +45,30 @@
 
 #define MSM_PMEM_ADSP_SIZE		0x03200000
 
-#define PMEM_KERNEL_EBI1_SIZE	0x00D00000
+#define PMEM_KERNEL_EBI0_SIZE	0x00D00000
 
 #define MSM_PMEM_SF_SIZE		0x02500000
 
-#define MSM_FB_SIZE				0x00800000
+/*
+ * Reserve space for double buffered full screen
+ * res V4L2 video overlay - i.e. 1280x720x1.5x2
+*/
+#define MSM_V4L2_VIDEO_OVERLAY_BUF_SIZE 2764800
+
+#ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
+#define MSM_FB_PRIM_BUF_SIZE (roundup((roundup(1024, 32) * roundup(600, 32) * 4), 4096) * 3) /* 4 bpp x 3 pages */
+#else
+#define MSM_FB_PRIM_BUF_SIZE (roundup((roundup(1024, 32) * roundup(600, 32) * 4), 4096) * 2) /* 4 bpp x 2 pages */
+#endif
+
+/* Note: must be multiple of 4096 */
+#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE, 4096)
 
 #ifdef CONFIG_ION_MSM
 static struct platform_device ion_dev;
-#define MSM_ION_AUDIO_SIZE	(MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI0_SIZE)
+#define MSM_ION_CAMERA_SIZE	MSM_PMEM_ADSP_SIZE
 #define MSM_ION_SF_SIZE		MSM_PMEM_SF_SIZE
-#define MSM_ION_HEAP_NUM	4
+#define MSM_ION_HEAP_NUM	3
 #endif
 
 /* GPIO definition */

@@ -116,7 +116,6 @@
 #include <mach/htc_bdaddress.h>
 #endif
 
-int htc_get_usb_accessory_adc_level(uint32_t *buffer);
 #include <mach/cable_detect.h>
 
 #define XC 2
@@ -2933,7 +2932,7 @@ static struct platform_device qsd_device_spi = {
 };
 
 #ifdef CONFIG_SPI_QSD
-static struct spi_board_info spi3254_board_info[] __initdata = {
+static struct spi_board_info msm_spi_board_info[] __initdata = {
 	{
 		.modalias	= "spi_aic3254",
 		.mode           = SPI_MODE_1,
@@ -2941,11 +2940,8 @@ static struct spi_board_info spi3254_board_info[] __initdata = {
 		.chip_select    = 3,
 		.max_speed_hz   = 9963243,
 	},
-};
-
-static struct spi_board_info display_spi_board_info[] __initdata = {
 	{
-		.modalias	= NTRIG_NAME,
+		.modalias		= NTRIG_NAME,
 		.mode           = SPI_MODE_0,
 		.bus_num        = 0,
 		.chip_select    = 2,
@@ -3041,98 +3037,20 @@ static struct msm_usb_host_platform_data msm_usb_host_pdata = {
 };
 #endif
 
-#ifdef CONFIG_USB_MSM_OTG_72K
-static int hsusb_rpc_connect(int connect)
-{
-	if (connect)
-		return msm_hsusb_rpc_connect();
-	else
-		return msm_hsusb_rpc_close();
-}
-#endif
-
-#ifdef CONFIG_USB_MSM_OTG_72K
-static struct vreg *vreg_3p3;
-static int msm_hsusb_ldo_init(int init)
-{
-	uint32_t version = 0;
-	int def_vol = 3400;
-
-	version = socinfo_get_version();
-
-	if (SOCINFO_VERSION_MAJOR(version) >= 2 &&
-			SOCINFO_VERSION_MINOR(version) >= 1) {
-		def_vol = 3075;
-		pr_debug("%s: default voltage:%d\n", __func__, def_vol);
-	}
-
-	if (init) {
-		vreg_3p3 = vreg_get(NULL, "usb");
-		if (IS_ERR(vreg_3p3))
-			return PTR_ERR(vreg_3p3);
-		vreg_set_level(vreg_3p3, def_vol);
-	} else
-		vreg_put(vreg_3p3);
-
-	return 0;
-}
-
-static int msm_hsusb_ldo_enable(int enable)
-{
-	static int ldo_status;
-
-	if (!vreg_3p3 || IS_ERR(vreg_3p3))
-		return -ENODEV;
-
-	if (ldo_status == enable)
-		return 0;
-
-	ldo_status = enable;
-
-	if (enable)
-		return vreg_enable(vreg_3p3);
-
-	return vreg_disable(vreg_3p3);
-}
-
-static int msm_hsusb_ldo_set_voltage(int mV)
-{
-	static int cur_voltage = 3400;
-
-	if (!vreg_3p3 || IS_ERR(vreg_3p3))
-		return -ENODEV;
-
-	if (cur_voltage == mV)
-		return 0;
-
-	cur_voltage = mV;
-
-	pr_debug("%s: (%d)\n", __func__, mV);
-
-	return vreg_set_level(vreg_3p3, mV);
-}
-#endif
-
 static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0D, 0x1, 0x10, -1 };
-static struct msm_otg_platform_data msm_otg_pdata = {
+static struct msm_hsusb_gadget_platform_data msm_gadget_pdata = {
 	.phy_init_seq		= phy_init_seq,
-	.mode			= USB_PERIPHERAL,
-	.otg_control		= OTG_PMIC_CONTROL,
-	.power_budget		= 750,
-	.phy_type = CI_45NM_INTEGRATED_PHY,
+	.is_phy_status_timer_on = 1,
 };
 
-static struct android_pmem_platform_data android_pmem_pdata = {
-	.name = "pmem",
-	.allocator_type = PMEM_ALLOCATORTYPE_ALLORNOTHING,
-	.cached = 1,
-	.memory_type = MEMTYPE_EBI1,
-};
-
-static struct platform_device android_pmem_device = {
-	.name = "android_pmem",
-	.id = 0,
-	.dev = { .platform_data = &android_pmem_pdata },
+static struct msm_otg_platform_data msm_otg_pdata = {
+#ifdef CONFIG_USB_EHCI_MSM_72K
+	.vbus_power = msm_hsusb_vbus_power,
+#endif
+	.pemp_level		= PRE_EMPHASIS_WITH_20_PERCENT,
+	.cdr_autoreset	= CDR_AUTO_RESET_DISABLE,
+	.drv_ampl		= HS_DRV_AMPLITUDE_DEFAULT,
+	.se1_gating		= SE1_GATING_DISABLE,
 };
 
 static struct resource msm_fb_resources[] = {
@@ -3146,30 +3064,30 @@ static struct platform_device msm_migrate_pages_device = {
 	.id     = -1,
 };
 
+static struct android_pmem_platform_data android_pmem_pdata = {
+	.name = "pmem",
+	.allocator_type = PMEM_ALLOCATORTYPE_ALLORNOTHING,
+	.cached = 1,
+	.memory_type = MEMTYPE_EBI0,
+};
+
+static struct platform_device android_pmem_device = {
+	.name = "android_pmem",
+	.id = 0,
+	.dev = { .platform_data = &android_pmem_pdata },
+};
+
 static struct android_pmem_platform_data android_pmem_adsp_pdata = {
        .name = "pmem_adsp",
        .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
        .cached = 1,
-	.memory_type = MEMTYPE_EBI1,
-};
-
-static struct android_pmem_platform_data android_pmem_audio_pdata = {
-       .name = "pmem_audio",
-       .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-       .cached = 0,
 	.memory_type = MEMTYPE_EBI0,
 };
 
 static struct platform_device android_pmem_adsp_device = {
-       .name = "android_pmem",
-       .id = 2,
-       .dev = { .platform_data = &android_pmem_adsp_pdata },
-};
-
-static struct platform_device android_pmem_audio_device = {
-       .name = "android_pmem",
-       .id = 3,
-       .dev = { .platform_data = &android_pmem_audio_pdata },
+	.name = "android_pmem",
+	.id = 2,
+	.dev = { .platform_data = &android_pmem_adsp_pdata },
 };
 
 #if defined(CONFIG_CRYPTO_DEV_QCRYPTO) || \
@@ -3718,81 +3636,6 @@ static struct platform_device ram_console_device = {
 	.resource       = ram_console_resources,
 };
 
-#define PM8058ADC_16BIT(adc) ((adc * 2200) / 65535) /* vref=2.2v, 16-bits resolution */
-int64_t flyer_get_usbid_adc(void)
-{
-	uint32_t adc_value = 0xffffffff;
-	htc_get_usb_accessory_adc_level(&adc_value);
-	adc_value = PM8058ADC_16BIT(adc_value);
-	return adc_value;
-}
-
-static uint32_t usb_ID_PIN_input_table[] = {
-	GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),
-};
-
-static uint32_t usb_ID_PIN_ouput_table[] = {
-	GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-};
-
-static uint32_t usb_ID_PIN_input_table_XC[] = {
-	GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-};
-
-static uint32_t usb_ID_PIN_ouput_table_XC[] = {
-	GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-};
-
-void config_flyer_usb_id_gpios(bool output)
-{
-	if (system_rev >= XC) {
-		if (output) {
-			config_gpio_table(usb_ID_PIN_ouput_table_XC, ARRAY_SIZE(usb_ID_PIN_ouput_table_XC));
-			gpio_set_value(FLYER_GPIO_USB_ID_PIN_XC, 1);
-			printk(KERN_INFO "%s %d output high\n",  __func__, FLYER_GPIO_USB_ID_PIN_XC);
-		} else {
-			config_gpio_table(usb_ID_PIN_input_table_XC, ARRAY_SIZE(usb_ID_PIN_input_table_XC));
-			printk(KERN_INFO "%s %d input none pull\n",  __func__, FLYER_GPIO_USB_ID_PIN_XC);
-		}
-	} else {
-		if (output) {
-			config_gpio_table(usb_ID_PIN_ouput_table, ARRAY_SIZE(usb_ID_PIN_ouput_table));
-			gpio_set_value(FLYER_GPIO_USB_ID_PIN, 1);
-			printk(KERN_INFO "%s %d output high\n",  __func__, FLYER_GPIO_USB_ID_PIN);
-		} else {
-			config_gpio_table(usb_ID_PIN_input_table, ARRAY_SIZE(usb_ID_PIN_input_table));
-			printk(KERN_INFO "%s %d input none pull\n",  __func__, FLYER_GPIO_USB_ID_PIN);
-		}
-	}
-}
-
-static void flyer_config_9v_gpio(int input)
-{
-	printk(KERN_INFO "%s: %d\n", __func__, input);
-
-	if (input)
-		pm8xxx_gpio_cfg(FLYER_9V_AC_DETECT, PM_GPIO_DIR_IN, 0, 0, PM_GPIO_PULL_UP_31P5, PM8058_GPIO_VIN_L6, 0, PM_GPIO_FUNC_NORMAL, 0);
-	else
-		pm8xxx_gpio_cfg(FLYER_9V_AC_DETECT, PM_GPIO_DIR_OUT, PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_DN, PM8058_GPIO_VIN_L6, 0, PM_GPIO_FUNC_NORMAL, 0);
-}
-
-static struct cable_detect_platform_data cable_detect_pdata = {
-	.detect_type 			= CABLE_TYPE_PMIC_ADC,
-	.usb_id_pin_gpio 		= FLYER_GPIO_USB_ID_PIN,
-	.config_usb_id_gpios 	= config_flyer_usb_id_gpios,
-	.get_adc_cb				= flyer_get_usbid_adc,
-	.ac_9v_gpio				= PM8058_GPIO_PM_TO_SYS(FLYER_9V_AC_DETECT),
-	.configure_ac_9v_gpio	= flyer_config_9v_gpio,
-};
-
-static struct platform_device cable_detect_device = {
-	.name	= "cable_detect",
-	.id	= -1,
-	.dev	= {
-		.platform_data = &cable_detect_pdata,
-	},
-};
-
 static struct platform_device *devices[] __initdata = {
         &ram_console_device,
 #if defined(CONFIG_SERIAL_MSM) || defined(CONFIG_MSM_SERIAL_DEBUGGER)
@@ -3814,7 +3657,6 @@ static struct platform_device *devices[] __initdata = {
 #endif
         &msm_device_smd,
         &msm_device_dmov,
-        &msm_device_otg,
         &qsd_device_spi,
 #ifdef CONFIG_MSM_SSBI
         &msm_device_ssbi_pmic1,
@@ -3831,7 +3673,6 @@ static struct platform_device *devices[] __initdata = {
         &msm_rotator_device,
 #endif
         &android_pmem_adsp_device,
-        &android_pmem_audio_device,
 #ifdef CONFIG_ION_MSM
 		&ion_dev,
 #endif
@@ -3887,7 +3728,6 @@ static struct platform_device *devices[] __initdata = {
 #endif
 
         &gpio_leds,
-		&cable_detect_device,
         &htc_drm, //Might need to remove
 };
 
@@ -4463,20 +4303,18 @@ void flyer_add_usb_devices(void)
 	printk(KERN_INFO "%s rev: %d\n", __func__, system_rev);
 	android_usb_pdata.products[0].product_id =
 			android_usb_pdata.product_id;
+	android_usb_pdata.products[0].product_id =
+			android_usb_pdata.product_id;
+	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 
-
-	/* diag bit set */
-	if (get_radio_flag() & 0x20000)
-		android_usb_pdata.diag_init = 1;
-
-	/* add cdrom support in normal mode */
-	if (board_mfg_mode() == 0) {
-		android_usb_pdata.nluns = 3;
-		android_usb_pdata.cdrom_lun = 0x4;
+	if (system_rev >= 2) {
+		android_usb_pdata.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN_XC;
 	}
-
-	config_flyer_usb_id_gpios(0);
-	msm_device_gadget_peripheral.dev.parent = &msm_device_otg.dev;
+	
+#if defined(CONFIG_USB_OTG)
+	msm_device_otg.dev.platform_data = &msm_otg_pdata;
+	platform_device_register(&msm_device_otg);
+#endif
 	platform_device_register(&msm_device_gadget_peripheral);
 	platform_device_register(&android_usb_device);
 }
@@ -4561,10 +4399,6 @@ static void __init flyer_init(void)
 	/*usb driver won't be loaded in MFG 58 station and gift mode*/
 	if (!(board_mfg_mode() == 6 || board_mfg_mode() == 7))
 		flyer_add_usb_devices();
-	if (system_rev >= 2) {
-		android_usb_pdata.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN_XC;
-		cable_detect_pdata.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN_XC;
-	}
 
 
 #ifdef CONFIG_USB_EHCI_MSM_72K
@@ -4573,7 +4407,7 @@ static void __init flyer_init(void)
 	msm7x30_init_mmc();
 	msm_qsd_spi_init();
 
-
+	spi_register_board_info(msm_spi_board_info, ARRAY_SIZE(msm_spi_board_info));
 
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	BUG_ON(msm_pm_boot_init(MSM_PM_BOOT_CONFIG_RESET_VECTOR, ioremap(0x0, PAGE_SIZE)));
@@ -4587,7 +4421,6 @@ static void __init flyer_init(void)
 	flyer_init_marimba();
 #ifdef CONFIG_MSM7KV2_AUDIO
 	aux_pcm_gpio_init();
-	spi_register_board_info(spi3254_board_info, ARRAY_SIZE(spi3254_board_info));
 	msm_snddev_init();
 	flyer_audio_init();
 #endif
@@ -4642,7 +4475,6 @@ static void __init flyer_init(void)
 		i2c_register_board_info(0, i2c_compass_devices_VER_A, ARRAY_SIZE(i2c_compass_devices_VER_A));
 	}
 
-	spi_register_board_info(display_spi_board_info,	ARRAY_SIZE(display_spi_board_info));
 	if (system_rev >= 2) {
 		flyer_ts_ntrig_data[0].spi_enable = FLYER_GPIO_SPI_ENABLE_XC;
 	}
@@ -4723,7 +4555,7 @@ static int __init pmem_sf_size_setup(char *p)
 }
 early_param("pmem_sf_size", pmem_sf_size_setup);
 
-static unsigned fb_size = MSM_FB_SIZE;
+static unsigned fb_size;
 static int __init fb_size_setup(char *p)
 {
 	fb_size = memparse(p, NULL);
@@ -4739,26 +4571,19 @@ static int __init pmem_adsp_size_setup(char *p)
 }
 early_param("pmem_adsp_size", pmem_adsp_size_setup);
 
-static unsigned pmem_audio_size = MSM_PMEM_AUDIO_SIZE;
-static int __init pmem_audio_size_setup(char *p)
-{
-	pmem_audio_size = memparse(p, NULL);
-	return 0;
-}
-early_param("pmem_audio_size", pmem_audio_size_setup);
-
 #ifdef CONFIG_ION_MSM
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 static struct ion_co_heap_pdata co_ion_pdata = {
-	.adjacent_mem_id	= INVALID_HEAP_ID,
-	.align 				= PAGE_SIZE,
+	.adjacent_mem_id = INVALID_HEAP_ID,
+	.align = PAGE_SIZE,
 };
 #endif
 
-/**
+/*
  * These heaps are listed in the order they will be allocated.
  * Don't swap the order unless you know what you are doing!
  */
+
 struct ion_platform_heap msm7x30_heaps[] = {
 		{
 			.id		= ION_SYSTEM_HEAP_ID,
@@ -4766,23 +4591,15 @@ struct ion_platform_heap msm7x30_heaps[] = {
 			.name	= ION_VMALLOC_HEAP_NAME,
 		},
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-		/* PMEM_ADSP = CAMERA */
+		/* CAMERA */
 		{
-			.id	= ION_CAMERA_HEAP_ID,
+			.id		= ION_CAMERA_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_CAMERA_HEAP_NAME,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
 		},
-		/* MM = AUDIO */
-		{
-			.id		= ION_CP_MM_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
-			.name	= ION_MM_HEAP_NAME,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *)&co_ion_pdata,
-		},
-		/* PMEM_MDP = SF */
+		/* PMEM_MDP =SF */
 		{
 			.id		= ION_SF_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
@@ -4791,6 +4608,7 @@ struct ion_platform_heap msm7x30_heaps[] = {
 			.extra_data = (void *)&co_ion_pdata,
 		},
 #endif
+		
 };
 
 static struct ion_platform_data ion_pdata = {
@@ -4816,26 +4634,28 @@ static struct memtype_reserve msm7x30_reserve_table[] __initdata = {
 	},
 };
 
+unsigned long msm_ion_camera_size;
+static void fix_sizes(void)
+{
+#ifdef CONFIG_ION_MSM
+	msm_ion_camera_size = pmem_adsp_size;
+#endif
+}
+
 static void __init size_pmem_device(struct android_pmem_platform_data *pdata, unsigned long start, unsigned long size)
 {
 	pdata->start = start;
 	pdata->size = size;
-	if (pdata->start)
-		pr_info("%s: pmem %s requests %lu bytes at 0x%p (0x%lx physical).\r\n",
-			__func__, pdata->name, size, __va(start), start);
-	else
-		pr_info("%s: pmem %s requests %lu bytes dynamically.\r\n",
-			__func__, pdata->name, size);
+	pr_info("%s: allocating %lu bytes at 0x%p (0x%lx physical) for %s\n",
+		__func__, size, __va(start), start, pdata->name);
 }
 
 static void __init size_pmem_devices(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
-#ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 	size_pmem_device(&android_pmem_adsp_pdata, 0, pmem_adsp_size);
-	size_pmem_device(&android_pmem_audio_pdata, 0, pmem_audio_size);
-	size_pmem_device(&android_pmem_pdata, 0, pmem_sf_size);
-	msm7x30_reserve_table[MEMTYPE_EBI1].size += PMEM_KERNEL_EBI1_SIZE;
+#ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
+	android_pmem_pdata.size = pmem_sf_size;
 #endif
 #endif
 }
@@ -4844,8 +4664,8 @@ static void __init size_pmem_devices(void)
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 static void __init reserve_memory_for(struct android_pmem_platform_data *p)
 {
-	if (p->start == 0) {
-		pr_info("%s: reserve %lu bytes from memory %d for %s.\r\n", __func__, p->size, p->memory_type, p->name);
+	if (p->size > 0) {
+		pr_info("%s: reserve %lu bytes from memory %d for %s.\n", __func__, p->size, p->memory_type, p->name);
 		msm7x30_reserve_table[p->memory_type].size += p->size;
 	}
 }
@@ -4855,10 +4675,9 @@ static void __init reserve_memory_for(struct android_pmem_platform_data *p)
 static void __init reserve_pmem_memory(void)
 {
 #ifdef CONFIG_ANDROID_PMEM
+	msm7x30_reserve_table[MEMTYPE_EBI0].size += PMEM_KERNEL_EBI0_SIZE;
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
-	reserve_memory_for(&android_pmem_adsp_pdata);
-	reserve_memory_for(&android_pmem_audio_pdata);
-	reserve_memory_for(&android_pmem_pdata);
+	reserve_memory_for(&android_pmem_pdata);	
 #endif
 #endif
 }
@@ -4866,23 +4685,22 @@ static void __init reserve_pmem_memory(void)
 static void __init size_ion_devices(void)
 {
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-	ion_pdata.heaps[1].size = MSM_PMEM_ADSP_SIZE;
-	ion_pdata.heaps[2].size = MSM_ION_AUDIO_SIZE;
-	ion_pdata.heaps[3].size = MSM_ION_SF_SIZE;
+	ion_pdata.heaps[1].size = MSM_ION_CAMERA_SIZE;
+	ion_pdata.heaps[2].size = MSM_ION_SF_SIZE;
 #endif
 }
 
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-	msm7x30_reserve_table[MEMTYPE_EBI0].size += MSM_PMEM_ADSP_SIZE;
-	msm7x30_reserve_table[MEMTYPE_EBI0].size += MSM_ION_AUDIO_SIZE;
+	msm7x30_reserve_table[MEMTYPE_EBI0].size += MSM_ION_CAMERA_SIZE;
 	msm7x30_reserve_table[MEMTYPE_EBI0].size += MSM_ION_SF_SIZE;
 #endif
 }
 
 static void __init msm7x30_calculate_reserve_sizes(void)
 {
+	fix_sizes();
 	size_pmem_devices();
 	reserve_pmem_memory();
 	size_ion_devices();
@@ -4915,7 +4733,7 @@ static void __init flyer_allocate_memory_regions(void)
 	void *addr;
 	unsigned long size;
 
-	size = fb_size ? : MSM_FB_SIZE;
+	size = MSM_FB_SIZE;
 	addr = alloc_bootmem_align(size, 0x1000);
 	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_base = msm_fb_resources[0].start;
