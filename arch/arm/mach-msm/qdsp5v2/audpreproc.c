@@ -22,7 +22,7 @@
 #include <linux/wakelock.h>
 #include <mach/msm_adsp.h>
 
-#include <mach/qdsp5v2_2x/audpreproc.h>
+#include <mach/qdsp5v2/audpreproc.h>
 #include <mach/debug_mm.h>
 
 

@@ -21,13 +21,13 @@
 #include <linux/msm_audio_7X30.h>
 #include <asm/uaccess.h>
 #include <asm/atomic.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <mach/debug_mm.h>
-#include <mach/qdsp5v2_2x/qdsp5audppmsg.h>
-#include <mach/qdsp5v2_2x/audpp.h>
+#include <mach/qdsp5v2/qdsp5audppmsg.h>
+#include <mach/qdsp5v2/audpp.h>
 
 #ifndef MAX
 #define  MAX(x, y) (((x) > (y)) ? (x) : (y))

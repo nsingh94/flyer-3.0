@@ -19,9 +19,9 @@
 #include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/jiffies.h>
-#include <mach/qdsp5v2_2x/qdsp5afecmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5afemsg.h>
-#include <mach/qdsp5v2_2x/afe.h>
+#include <mach/qdsp5v2/qdsp5afecmdi.h>
+#include <mach/qdsp5v2/qdsp5afemsg.h>
+#include <mach/qdsp5v2/afe.h>
 #include <mach/msm_adsp.h>
 #include <mach/debug_mm.h>
 

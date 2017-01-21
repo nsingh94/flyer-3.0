@@ -35,15 +35,15 @@
 #include <mach/msm_adsp.h>
 
 #include <linux/msm_audio_7X30.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 
-#include <mach/qdsp5v2_2x/qdsp5audppmsg.h>
-#include <mach/qdsp5v2_2x/qdsp5audplaycmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audplaymsg.h>
-#include <mach/qdsp5v2_2x/audpp.h>
-#include <mach/qdsp5v2_2x/codec_utils.h>
-#include <mach/qdsp5v2_2x/mp3_funcs.h>
-#include <mach/qdsp5v2_2x/pcm_funcs.h>
+#include <mach/qdsp5v2/qdsp5audppmsg.h>
+#include <mach/qdsp5v2/qdsp5audplaycmdi.h>
+#include <mach/qdsp5v2/qdsp5audplaymsg.h>
+#include <mach/qdsp5v2/audpp.h>
+#include <mach/qdsp5v2/codec_utils.h>
+#include <mach/qdsp5v2/mp3_funcs.h>
+#include <mach/qdsp5v2/pcm_funcs.h>
 #include <mach/debug_mm.h>
 
 #define ADRV_STATUS_AIO_INTF 0x00000001

@@ -22,8 +22,8 @@
 #include <linux/io.h>
 #include <linux/err.h>
 
-#include <mach/qdsp5v2_2x/mi2s.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/mi2s.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 
 #define DEBUG
 #ifdef DEBUG

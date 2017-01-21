@@ -57,18 +57,18 @@
 #include <linux/platform_device.h>
 #include <linux/debugfs.h>
 #include <linux/mfd/msm-adie-codec.h>
-#include <mach/qdsp5v2_2x/snddev_icodec.h>
-#include <mach/qdsp5v2_2x/aux_pcm.h>
-#include <mach/qdsp5v2_2x/snddev_ecodec.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
-#include <mach/qdsp5v2_2x/snddev_mi2s.h>
-#include <mach/qdsp5v2_2x/mi2s.h>
+#include <mach/qdsp5v2/snddev_icodec.h>
+#include <mach/qdsp5v2/aux_pcm.h>
+#include <mach/qdsp5v2/snddev_ecodec.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
+#include <mach/qdsp5v2/snddev_mi2s.h>
+#include <mach/qdsp5v2/mi2s.h>
 #include <mach/board.h>
 #include <asm/mach-types.h>
 #include <asm/uaccess.h>
-#include <mach/qdsp5v2_2x/audio_acdb_def.h>
+#include <mach/qdsp5v2/audio_acdb_def.h>
 
-#include <mach/qdsp5v2_2x/marimba_profile.h>
+#include <mach/qdsp5v2/marimba_profile.h>
 #include <linux/spi/spi_aic3254.h>
 #ifdef CONFIG_TIMPANI_CODEC
 #include "timpani_profile_8x60.h"

@@ -32,11 +32,11 @@
 #include <asm/atomic.h>
 #include <asm/ioctls.h>
 #include <mach/msm_adsp.h>
-#include <mach/qdsp5v2_2x/qdsp5audppcmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audppmsg.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
-#include <mach/qdsp5v2_2x/audpp.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/qdsp5audppcmdi.h>
+#include <mach/qdsp5v2/qdsp5audppmsg.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audpp.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 
 #include <mach/htc_pwrsink.h>
 #include <mach/debug_mm.h>

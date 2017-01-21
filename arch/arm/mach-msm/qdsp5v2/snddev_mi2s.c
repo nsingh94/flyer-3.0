@@ -22,12 +22,12 @@
 #include <linux/io.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
-#include <mach/qdsp5v2_2x/audio_interct.h>
-#include <mach/qdsp5v2_2x/mi2s.h>
-#include <mach/qdsp5v2_2x/afe.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audio_interct.h>
+#include <mach/qdsp5v2/mi2s.h>
+#include <mach/qdsp5v2/afe.h>
 #include <mach/debug_mm.h>
-#include <mach/qdsp5v2_2x/snddev_mi2s.h>
+#include <mach/qdsp5v2/snddev_mi2s.h>
 
 /* Global state for the driver */
 struct snddev_mi2s_drv_state {

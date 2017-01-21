@@ -30,8 +30,8 @@
 #ifndef _MACH_QDSP5_V2_AUDPREPROC_H
 #define _MACH_QDSP5_V2_AUDPREPROC_H
 
-#include <mach/qdsp5v2_2x/qdsp5audpreproccmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audpreprocmsg.h>
+#include <mach/qdsp5v2/qdsp5audpreproccmdi.h>
+#include <mach/qdsp5v2/qdsp5audpreprocmsg.h>
 
 #define MAX_ENC_COUNT 3
 

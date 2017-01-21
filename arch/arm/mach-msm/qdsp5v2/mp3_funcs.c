@@ -21,32 +21,30 @@
 
 #include <linux/msm_audio.h>
 
-#include <mach/qdsp5v2_2x/qdsp5audppmsg.h>
-#include <mach/qdsp5v2_2x/qdsp5audplaycmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audplaymsg.h>
-#include <mach/qdsp5v2_2x/audpp.h>
-#include <mach/qdsp5v2_2x/codec_utils.h>
-#include <mach/qdsp5v2_2x/pcm_funcs.h>
+#include <mach/qdsp5v2/qdsp5audppmsg.h>
+#include <mach/qdsp5v2/qdsp5audplaycmdi.h>
+#include <mach/qdsp5v2/qdsp5audplaymsg.h>
+#include <mach/qdsp5v2/audpp.h>
+#include <mach/qdsp5v2/codec_utils.h>
+#include <mach/qdsp5v2/mp3_funcs.h>
 #include <mach/debug_mm.h>
 
-long pcm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+long mp3_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-	MM_DBG("pcm_ioctl() cmd = %d\n", cmd);
+	MM_DBG("mp3_ioctl() cmd = %d\b", cmd);
 
 	return -EINVAL;
 }
 
-void audpp_cmd_cfg_pcm_params(struct audio *audio)
+void audpp_cmd_cfg_mp3_params(struct audio *audio)
 {
-	struct audpp_cmd_cfg_adec_params_wav cmd;
+	struct audpp_cmd_cfg_adec_params_mp3 cmd;
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.common.cmd_id = AUDPP_CMD_CFG_ADEC_PARAMS;
-	cmd.common.length = AUDPP_CMD_CFG_ADEC_PARAMS_WAV_LEN >> 1;
+	cmd.common.length = AUDPP_CMD_CFG_ADEC_PARAMS_MP3_LEN;
 	cmd.common.dec_id = audio->dec_id;
 	cmd.common.input_sampling_frequency = audio->out_sample_rate;
-	cmd.stereo_cfg = audio->out_channel_mode;
-	cmd.pcm_width = audio->out_bits;
-	cmd.sign = 0;
+
 	audpp_send_queue2(&cmd, sizeof(cmd));
 }

@@ -23,17 +23,17 @@
 #include "board-flyer.h"
 #include <mach/pmic.h>
 #ifdef CONFIG_MSM7KV2_AUDIO
-#include <mach/qdsp5v2_2x/snddev_icodec.h>
-#include <mach/qdsp5v2_2x/snddev_ecodec.h>
-#include <mach/qdsp5v2_2x/audio_def.h>
-#include <mach/qdsp5v2_2x/voice.h>
+#include <mach/qdsp5v2/snddev_icodec.h>
+#include <mach/qdsp5v2/snddev_ecodec.h>
+#include <mach/qdsp5v2/audio_def.h>
+#include <mach/qdsp5v2/voice.h>
 #endif
 #include <mach/htc_acoustic_7x30.h>
 #include <mach/htc_acdb_7x30.h>
 #include <linux/spi/spi_aic3254.h>
-#include <mach/qdsp5v2_2x/snddev_mi2s.h>
-#include <mach/qdsp5v2_2x/mi2s.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/snddev_mi2s.h>
+#include <mach/qdsp5v2/mi2s.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 
 static struct mutex bt_sco_lock;
 static struct mutex mic_lock;

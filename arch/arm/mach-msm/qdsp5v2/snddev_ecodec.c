@@ -21,11 +21,11 @@
 #include <linux/err.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-#include <mach/qdsp5v2_2x/snddev_ecodec.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
-#include <mach/qdsp5v2_2x/audio_interct.h>
-#include <mach/qdsp5v2_2x/aux_pcm.h>
-#include <mach/qdsp5v2_2x/afe.h>
+#include <mach/qdsp5v2/snddev_ecodec.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audio_interct.h>
+#include <mach/qdsp5v2/aux_pcm.h>
+#include <mach/qdsp5v2/afe.h>
 #include <mach/debug_mm.h>
 
 static struct q5v2audio_ecodec_ops default_audio_ops;

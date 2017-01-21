@@ -20,7 +20,7 @@
 #include <linux/platform_device.h>
 #include <linux/io.h>
 #include <linux/err.h>
-#include <mach/qdsp5v2_2x/aux_pcm.h>
+#include <mach/qdsp5v2/aux_pcm.h>
 #include <mach/gpio.h>
 #include "../proc_comm.h"
 #include <linux/delay.h>

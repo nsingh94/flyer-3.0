@@ -30,17 +30,17 @@
 #include <linux/slab.h>
 
 #include <mach/dal.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
-#include <mach/qdsp5v2_2x/audpp.h>
-#include <mach/qdsp5v2_2x/audpreproc.h>
-#include <mach/qdsp5v2_2x/qdsp5audppcmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audpreproccmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audpreprocmsg.h>
-#include <mach/qdsp5v2_2x/qdsp5audppmsg.h>
-#include <mach/qdsp5v2_2x/audio_acdb.h>
-#include <mach/qdsp5v2_2x/audio_acdbi.h>
-#include <mach/qdsp5v2_2x/acdb_commands.h>
-#include <mach/qdsp5v2_2x/audio_acdb_def.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
+#include <mach/qdsp5v2/audpp.h>
+#include <mach/qdsp5v2/audpreproc.h>
+#include <mach/qdsp5v2/qdsp5audppcmdi.h>
+#include <mach/qdsp5v2/qdsp5audpreproccmdi.h>
+#include <mach/qdsp5v2/qdsp5audpreprocmsg.h>
+#include <mach/qdsp5v2/qdsp5audppmsg.h>
+#include <mach/qdsp5v2/audio_acdb.h>
+#include <mach/qdsp5v2/audio_acdbi.h>
+#include <mach/qdsp5v2/acdb_commands.h>
+#include <mach/qdsp5v2/audio_acdb_def.h>
 
 #include <mach/htc_acdb.h>
 #include <mach/htc_acoustic_7x30.h>

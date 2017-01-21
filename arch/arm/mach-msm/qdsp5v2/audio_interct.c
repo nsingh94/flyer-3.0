@@ -18,7 +18,7 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <asm/io.h>
-#include <mach/qdsp5v2_2x/audio_interct.h>
+#include <mach/qdsp5v2/audio_interct.h>
 
 #define AUDIO_INTERCT_ADSPLPA_WBRX_SEL_BMSK 0x4
 #define AUDIO_INTERCT_ADSPLPA_WBRX_SEL_SHFT 0x2

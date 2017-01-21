@@ -22,9 +22,9 @@
 #include <linux/err.h>
 #include <linux/delay.h>
 #include <linux/clk.h>
-#include <mach/qdsp5v2_2x/lpa.h>
-#include <mach/qdsp5v2_2x/lpa_hw.h>
-#include <mach/qdsp5v2_2x/msm_lpa.h>
+#include <mach/qdsp5v2/lpa.h>
+#include <mach/qdsp5v2/lpa_hw.h>
+#include <mach/qdsp5v2/msm_lpa.h>
 #include <mach/debug_mm.h>
 
 #define LPA_REG_WRITEL(drv, val, reg)  writel(val, drv->baseaddr + reg)

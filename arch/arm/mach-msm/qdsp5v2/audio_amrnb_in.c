@@ -30,10 +30,10 @@
 #include <asm/ioctls.h>
 
 #include <mach/msm_adsp.h>
-#include <mach/qdsp5v2_2x/qdsp5audreccmdi.h>
-#include <mach/qdsp5v2_2x/qdsp5audrecmsg.h>
-#include <mach/qdsp5v2_2x/audpreproc.h>
-#include <mach/qdsp5v2_2x/audio_dev_ctl.h>
+#include <mach/qdsp5v2/qdsp5audreccmdi.h>
+#include <mach/qdsp5v2/qdsp5audrecmsg.h>
+#include <mach/qdsp5v2/audpreproc.h>
+#include <mach/qdsp5v2/audio_dev_ctl.h>
 #include <mach/debug_mm.h>
 
 /* FRAME_NUM must be a power of two */
