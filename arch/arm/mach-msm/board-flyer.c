@@ -116,6 +116,7 @@
 #include <mach/htc_bdaddress.h>
 #endif
 
+int htc_get_usb_accessory_adc_level(uint32_t *buffer);
 #include <mach/cable_detect.h>
 
 #define XC 2
@@ -2789,9 +2790,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.num_functions = ARRAY_SIZE(usb_functions_all),
 	.functions = usb_functions_all,
 	.fserial_init_string = "tty:modem,tty:autobot,tty:serial,tty:autobot",
-	.nluns = 2,
-	.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN,
-	//.req_reset_during_switch_func = 1,
+	.nluns = 1,
 };
 
 static struct platform_device android_usb_device = {
@@ -2994,64 +2993,127 @@ static void __init msm_qsd_spi_init(void)
 	qsd_device_spi.dev.platform_data = &qsd_spi_pdata;
 }
 
+#define PM8058ADC_16BIT(adc) ((adc * 2200) / 65535) /* vref=2.2v, 16-bits resolution */
+int64_t flyer_get_usbid_adc(void)
+{
+	uint32_t adc_value = 0xffffffff;
+	htc_get_usb_accessory_adc_level(&adc_value);
+	adc_value = PM8058ADC_16BIT(adc_value);
+	return adc_value;
+}
+
+static const unsigned int get_flyer_gpio_usb_id_pin(void)
+{
+	return (system_rev >= XC) ? FLYER_GPIO_USB_ID_PIN_XC : FLYER_GPIO_USB_ID_PIN;
+}
+
+static uint32_t usb_ID_PIN_input_table[] = {
+	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_4MA),
+};
+
+static uint32_t usb_ID_PIN_ouput_table[] = {
+	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_4MA),
+};
+
+static uint32_t usb_ID_PIN_ouput_table_XC[] = {
+	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_4MA),
+};
+
+static uint32_t usb_ID_PIN_input_table_XC[] = {
+	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_4MA),
+};
+
+void config_flyer_usb_id_gpios(bool output)
+{
+	if (system_rev >= XC) {
+		if (output) {
+			config_gpio_table(usb_ID_PIN_ouput_table_XC,
+				ARRAY_SIZE(usb_ID_PIN_ouput_table_XC));
+			gpio_set_value(FLYER_GPIO_USB_ID_PIN_XC, 1);
+		} else
+			config_gpio_table(usb_ID_PIN_input_table_XC,
+				ARRAY_SIZE(usb_ID_PIN_input_table_XC));
+	} else {
+		if (output) {
+			config_gpio_table(usb_ID_PIN_ouput_table,
+				ARRAY_SIZE(usb_ID_PIN_ouput_table));
+			gpio_set_value(FLYER_GPIO_USB_ID_PIN, 1);
+		} else
+			config_gpio_table(usb_ID_PIN_input_table,
+				ARRAY_SIZE(usb_ID_PIN_input_table));
+	}
+}
+
+static struct cable_detect_platform_data cable_detect_pdata = {
+	.detect_type = CABLE_TYPE_PMIC_ADC,
+	.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN,
+	.config_usb_id_gpios = config_flyer_usb_id_gpios,
+	.get_adc_cb		= flyer_get_usbid_adc,
+};
+
+static struct platform_device cable_detect_device = {
+	.name	= "cable_detect",
+	.id	= -1,
+	.dev	= {
+		.platform_data = &cable_detect_pdata,
+	},
+};
+
 #ifdef CONFIG_USB_EHCI_MSM_72K
 static void msm_hsusb_vbus_power(unsigned phy_info, int on)
 {
-	int rc;
 	static int vbus_is_on;
-	struct pm8xxx_gpio_init_info usb_vbus = {
-		PM8058_GPIO_PM_TO_SYS(36),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-			.output_value   = 1,
-			.vin_sel        = 2,
-			.out_strength   = PM_GPIO_STRENGTH_MED,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-		},
-	};
 
 	/* If VBUS is already on (or off), do nothing. */
 	if (unlikely(on == vbus_is_on))
-		return;
-
-	if (on) {
-		rc = pm8xxx_gpio_config(usb_vbus.gpio, &usb_vbus.config);
-		if (rc) {
-			pr_err("%s PMIC GPIO 36 write failed\n", __func__);
-			return;
-		}
-	} else {
-		gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(36), 0);
-	}
+	return;
 
 	vbus_is_on = on;
 }
 
 static struct msm_usb_host_platform_data msm_usb_host_pdata = {
-		.phy_info   = (USB_PHY_INTEGRATED | USB_PHY_MODEL_45NM),
-		.vbus_power = msm_hsusb_vbus_power,
-		.power_budget   = 180,
+	.phy_info	= (USB_PHY_INTEGRATED | USB_PHY_MODEL_45NM),
+	.vbus_power	= msm_hsusb_vbus_power,
+	.power_budget	= 500, /* FIXME: 390, */
 };
 #endif
 
+#if defined(CONFIG_USB_GADGET_MSM_72K) || defined(CONFIG_USB_EHCI_MSM)
+static struct msm_otg_platform_data msm_otg_pdata = {
+#ifdef CONFIG_USB_EHCI_MSM_72K
+	.vbus_power = msm_hsusb_vbus_power,
+#endif
+	.pemp_level		= PRE_EMPHASIS_WITH_20_PERCENT,
+	.cdr_autoreset		= CDR_AUTO_RESET_DISABLE,
+	.drv_ampl		= HS_DRV_AMPLITUDE_DEFAULT,
+	.se1_gating		= SE1_GATING_DISABLE,
+};
+#endif
+
+#ifdef CONFIG_USB_G_ANDROID
 static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0D, 0x1, 0x10, -1 };
 static struct msm_hsusb_gadget_platform_data msm_gadget_pdata = {
 	.phy_init_seq		= phy_init_seq,
 	.is_phy_status_timer_on = 1,
 };
 
-static struct msm_otg_platform_data msm_otg_pdata = {
-#ifdef CONFIG_USB_EHCI_MSM_72K
-	.vbus_power = msm_hsusb_vbus_power,
+void flyer_add_usb_devices(void)
+{
+	printk(KERN_INFO "%s rev: %d\n", __func__, system_rev);
+	android_usb_pdata.products[0].product_id =
+		android_usb_pdata.product_id;
+
+	cable_detect_pdata.usb_id_pin_gpio = get_flyer_gpio_usb_id_pin();
+
+	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;	
+#if defined(CONFIG_USB_OTG)
+	msm_device_otg.dev.platform_data = &msm_otg_pdata;
+	platform_device_register(&msm_device_otg);
 #endif
-	.pemp_level		= PRE_EMPHASIS_WITH_20_PERCENT,
-	.cdr_autoreset	= CDR_AUTO_RESET_DISABLE,
-	.drv_ampl		= HS_DRV_AMPLITUDE_DEFAULT,
-	.se1_gating		= SE1_GATING_DISABLE,
-};
+	platform_device_register(&msm_device_gadget_peripheral);
+	platform_device_register(&android_usb_device);
+}
+#endif
 
 static struct resource msm_fb_resources[] = {
 	{
@@ -3728,6 +3790,7 @@ static struct platform_device *devices[] __initdata = {
 #endif
 
         &gpio_leds,
+		&cable_detect_device,
         &htc_drm, //Might need to remove
 };
 
@@ -4298,27 +4361,6 @@ static void flyer_reset(void)
 	gpio_set_value(FLYER_GPIO_PS_HOLD, 0);
 }
 
-void flyer_add_usb_devices(void)
-{
-	printk(KERN_INFO "%s rev: %d\n", __func__, system_rev);
-	android_usb_pdata.products[0].product_id =
-			android_usb_pdata.product_id;
-	android_usb_pdata.products[0].product_id =
-			android_usb_pdata.product_id;
-	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
-
-	if (system_rev >= 2) {
-		android_usb_pdata.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN_XC;
-	}
-	
-#if defined(CONFIG_USB_OTG)
-	msm_device_otg.dev.platform_data = &msm_otg_pdata;
-	platform_device_register(&msm_device_otg);
-#endif
-	platform_device_register(&msm_device_gadget_peripheral);
-	platform_device_register(&android_usb_device);
-}
-
 static int __init board_serialno_setup(char *serialno)
 {
 	android_usb_pdata.serial_number = serialno;
@@ -4383,10 +4425,8 @@ static void __init flyer_init(void)
 	msm_otg_pdata.swfi_latency =
 	msm_pm_data
 	[MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT].latency;
-	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 #endif
 #endif
-	msm_device_otg.dev.platform_data = &msm_otg_pdata;
 
 #ifdef CONFIG_MSM_SSBI
 	msm_device_ssbi_pmic1.dev.platform_data =
