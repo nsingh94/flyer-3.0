@@ -25,8 +25,8 @@
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
 #define PM8058_GPIO_SYS_TO_PM(sys_gpio)    (sys_gpio - NR_GPIO_IRQS)
-#define PM8058_MPP_BASE			   PM8058_GPIO_PM_TO_SYS(PM8058_GPIOS)	//Added
-#define PM8058_MPP_PM_TO_SYS(pm_gpio)	   (pm_gpio + PM8058_MPP_BASE)	//Added
+#define PM8058_MPP_BASE			   PM8058_GPIO_PM_TO_SYS(PM8058_GPIOS)
+#define PM8058_MPP_PM_TO_SYS(pm_gpio)	   (pm_gpio + PM8058_MPP_BASE)
 
 #define MSM_LINUX_BASE1			0x14400000
 #define MSM_LINUX_SIZE1			0x0BC00000
@@ -86,7 +86,6 @@ static struct platform_device ion_dev;
 /* Wifi */
 #define FLYER_GPIO_WIFI_IRQ          (147)
 #define FLYER_GPIO_WIFI_EN           (39)
-#define FLYER_GPIO_WIFI_SHUTDOWN_N FLYER_GPIO_WIFI_EN //Added
 
 /* Sensors */
 #define FLYER_GPIO_COMPASS_INT_XA_XB (42)
@@ -262,7 +261,7 @@ static struct platform_device ion_dev;
 #define FLYER_SPI_CS2                (87)
 
 /* EMMC */
-#define FLYER_GPIO_EMMC_RST			 (88) //ADded
+#define FLYER_GPIO_EMMC_RST			 (88) //Added
 
 /* PMIC */
 #define PMIC_GPIO_INT                (27)
@@ -307,9 +306,8 @@ static struct platform_device ion_dev;
 
 /*display*/ //Added
 extern struct platform_device msm_device_mdp;
-extern struct platform_device msm_device_mddi0;
 extern int panel_type;
-extern unsigned long msm_fb_base; //MAYBE
+extern unsigned long msm_fb_base;
 
 #ifdef CONFIG_MICROP_COMMON
 void __init flyer_microp_init(void);

@@ -27,61 +27,6 @@
 static struct rfkill *bt_rfk;
 static const char bt_name[] = "bcm4329";
 
-/* bt initial configuration */
-static uint32_t flyer_bt_init_table[] = {
-
-	/* BT_RTS */
-	GPIO_CFG(FLYER_GPIO_BT_UART1_RTS,
-				1,
-				GPIO_CFG_OUTPUT,
-				GPIO_CFG_NO_PULL,
-				GPIO_CFG_8MA),
-	/* BT_CTS */
-	GPIO_CFG(FLYER_GPIO_BT_UART1_CTS,
-				1,
-				GPIO_CFG_INPUT,
-				GPIO_CFG_PULL_UP,
-				GPIO_CFG_8MA),
-	/* BT_RX */
-	GPIO_CFG(FLYER_GPIO_BT_UART1_RX,
-				1,
-				GPIO_CFG_INPUT,
-				GPIO_CFG_PULL_UP,
-				GPIO_CFG_8MA),
-	/* BT_TX */
-	GPIO_CFG(FLYER_GPIO_BT_UART1_TX,
-				1,
-				GPIO_CFG_OUTPUT,
-				GPIO_CFG_NO_PULL,
-				GPIO_CFG_8MA),
-
-	/* BT_RESET_N */
-	GPIO_CFG(FLYER_GPIO_BT_RESET_N,
-				0,
-				GPIO_CFG_OUTPUT,
-				GPIO_CFG_NO_PULL,
-				GPIO_CFG_4MA),
-	/* BT_SHUTDOWN_N */
-	GPIO_CFG(FLYER_GPIO_BT_SHUTDOWN_N,
-				0,
-				GPIO_CFG_OUTPUT,
-				GPIO_CFG_NO_PULL,
-				GPIO_CFG_4MA),
-
-	/* BT_HOST_WAKE */
-	GPIO_CFG(FLYER_GPIO_BT_HOST_WAKE,
-				0,
-				GPIO_CFG_INPUT,
-				GPIO_CFG_PULL_DOWN,
-				GPIO_CFG_4MA),
-	/* BT_CHIP_WAKE */
-	GPIO_CFG(FLYER_GPIO_BT_CHIP_WAKE,
-				0,
-				GPIO_CFG_OUTPUT,
-				GPIO_CFG_NO_PULL,
-				GPIO_CFG_4MA),
-};
-
 /* bt on configuration */
 static uint32_t flyer_bt_on_table[] = {
 
@@ -205,47 +150,6 @@ static void config_bt_table(uint32_t *table, int len)
 	}
 }
 
-static void flyer_config_bt_init(void)
-{
-	/* set bt initial configuration*/
-	config_bt_table(flyer_bt_init_table,
-				ARRAY_SIZE(flyer_bt_init_table));
-	mdelay(2);
-
-	/* BT_RESET_N */
-	gpio_set_value(FLYER_GPIO_BT_RESET_N, 0);
-	mdelay(1);
-
-	/* BT_SHUTDOWN_N */
-	gpio_set_value(FLYER_GPIO_BT_SHUTDOWN_N, 0);
-	mdelay(5);
-
-	/* BT_SHUTDOWN_N */
-	gpio_set_value(FLYER_GPIO_BT_SHUTDOWN_N, 1);
-	mdelay(1);
-
-	/* BT_RESET_N */
-	gpio_set_value(FLYER_GPIO_BT_RESET_N, 1);
-	mdelay(2);
-
-#if 0
-	/* BT_RESET_N */
-	gpio_configure(FLYER_GPIO_BT_RESET_N,
-				GPIOF_DRIVE_OUTPUT | GPIOF_OUTPUT_LOW);
-	mdelay(1);
-
-	/* BT_SHUTDOWN_N */
-	gpio_configure(FLYER_GPIO_BT_SHUTDOWN_N,
-				GPIOF_DRIVE_OUTPUT | GPIOF_OUTPUT_LOW);
-	mdelay(1);
-
-	/* BT_CHIP_WAKE */
-	gpio_configure(FLYER_GPIO_BT_CHIP_WAKE,
-				GPIOF_DRIVE_OUTPUT | GPIOF_OUTPUT_LOW);
-
-#endif
-}
-
 static void flyer_config_bt_on(void)
 {
 	printk(KERN_INFO "[BT]== R ON ==\n");
@@ -325,11 +229,6 @@ static int flyer_rfkill_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 	bool default_state = true; /* off */
-
-	flyer_config_bt_init();	/* bt gpio initial config */
-	/* always turn on clock? */
-	/* htc_wifi_bt_sleep_clk_ctl(CLK_ON, ID_BT); */
-	mdelay(2);
 
 	bluetooth_set_power(NULL, default_state);
 

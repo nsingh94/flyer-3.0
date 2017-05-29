@@ -74,12 +74,12 @@ static struct gpio_event_direct_entry flyer_keypad_input_map[] = {
 	},
 };
 
+uint32_t inputs_gpio_table[] = {
+	PCOM_GPIO_CFG(FLYER_GPIO_KEYPAD_POWER_KEY, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_4MA),
+};
+
 static void flyer_setup_input_gpio(void)
 {
-	uint32_t inputs_gpio_table[] = {
-		PCOM_GPIO_CFG(FLYER_GPIO_KEYPAD_POWER_KEY, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_4MA),
-	};
-
 	config_gpio_table(inputs_gpio_table, ARRAY_SIZE(inputs_gpio_table));
 }
 
@@ -87,7 +87,11 @@ static struct gpio_event_input_info flyer_keypad_input_info = {
 	.info.func = gpio_event_input_func,
 	.flags = GPIOEDF_PRINT_KEYS,
 	.type = EV_KEY,
+#if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR)
+	.debounce_time.tv.nsec = 5 * NSEC_PER_MSEC,
+# else
 	.debounce_time.tv64 = 5 * NSEC_PER_MSEC,
+# endif
 	.keymap = flyer_keypad_input_map,
 	.keymap_size = ARRAY_SIZE(flyer_keypad_input_map),
 	.setup_input_gpio = flyer_setup_input_gpio,
@@ -98,10 +102,7 @@ static struct gpio_event_info *flyer_keypad_info[] = {
 };
 
 static struct gpio_event_platform_data flyer_keypad_data = {
-	.names = {
-		"flyer-keypad",
-		NULL,
-	},
+	.name = "flyer-keypad-v0",
 	.info = flyer_keypad_info,
 	.info_count = ARRAY_SIZE(flyer_keypad_info),
 };
@@ -116,10 +117,7 @@ static struct platform_device flyer_keypad_input_device = {
 
 int __init flyer_init_keypad(void)
 {
-	printk(KERN_DEBUG "%s\n", __func__);
-
-	flyer_keypad_data.name = "flyer-keypad-v0";
-	printk("direct key:flyer-keypad-v0\n");
+	pr_info("[KEY] %s\n", __func__);
 
 	if (system_rev >= 2) {
 		flyer_keypad_input_info.keymap = flyer_keypad_input_map_xc;

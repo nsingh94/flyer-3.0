@@ -22,12 +22,10 @@
 #include <mach/dal.h>
 #include "board-flyer.h"
 #include <mach/pmic.h>
-#ifdef CONFIG_MSM7KV2_AUDIO
 #include <mach/qdsp5v2/snddev_icodec.h>
 #include <mach/qdsp5v2/snddev_ecodec.h>
 #include <mach/qdsp5v2/audio_def.h>
 #include <mach/qdsp5v2/voice.h>
-#endif
 #include <mach/htc_acoustic_7x30.h>
 #include <mach/htc_acdb_7x30.h>
 #include <linux/spi/spi_aic3254.h>
@@ -169,14 +167,26 @@ void flyer_snddev_poweramp_on(int en)
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
 		msleep(80);
-		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN), 1);
-		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN), 1);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN),
+						"SPKR_EN");
+		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN), 1);
+
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN),
+						"SPKL_EN");
+		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN), 1);
+
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode |= BIT_SPEAKER;
 	} else {
 		msleep(10);
-		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN), 0);
-		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN), 0);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN),
+						"SPKR_EN");
+		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKR_EN), 0);
+	
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN),
+						"SPKL_EN");
+		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN), 0);
+
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode &= ~BIT_SPEAKER;
 	}
@@ -188,11 +198,16 @@ void flyer_snddev_hsed_pamp_on(int en)
 	if (en) {
 		msleep(80);
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_EN), 1);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_EN),
+						"HP_AMP_EN");
+
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode |= BIT_HEADSET;
 	} else {
 		msleep(10);
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_EN), 0);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_EN),
+						"HP_AMP_EN");
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode &= ~BIT_HEADSET;
 	}
@@ -210,11 +225,15 @@ void flyer_snddev_receiver_pamp_on(int en)
 #if 0
 	if (en) {
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_EP_EN), 1);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_EP_EN),
+						"HP_AMP_EN");
 		mdelay(5);
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode |= BIT_RECEIVER;
 	} else {
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_EP_EN), 0);
+		gpio_request(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_EP_EN),
+						"HP_AMP_EN");
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode &= ~BIT_RECEIVER;
 	}
@@ -552,15 +571,13 @@ void __init flyer_audio_init(void)
 	if (gpio_get_value(PM8058_GPIO_PM_TO_SYS(FLYER_NC_PMIC13)) == 0 && system_rev == 3)
 	board_ver += 3;
 	pr_aud_info("%s board_ver = %d\n", __func__, board_ver);
-#ifdef CONFIG_MSM7KV2_AUDIO
 	htc_7x30_register_analog_ops(&ops);
 	htc_7x30_register_ecodec_ops(&eops);
 	htc_7x30_register_voice_ops(&vops);
 	htc_7x30_register_mi2s_ops(&mi2sops);
 	acoustic_register_ops(&acoustic);
 	acdb_register_ops(&acdb);
-#endif
-        aic3254_register_ctl_ops(&cops);
+    aic3254_register_ctl_ops(&cops);
 
 	/* Init PMIC GPIO */
 	pm8xxx_gpio_config(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_SPKL_EN), &audio_pwr);

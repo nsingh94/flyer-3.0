@@ -179,7 +179,6 @@ static struct mmc_platform_data flyer_movinand_data = {
 #endif
 
 /* ---- WIFI ---- */
-
 static uint32_t wifi_on_gpio_table[] = {
 	PCOM_GPIO_CFG(116, 1, GPIO_OUTPUT, GPIO_PULL_UP, GPIO_4MA), /* DAT3 */
 	PCOM_GPIO_CFG(117, 1, GPIO_OUTPUT, GPIO_PULL_UP, GPIO_4MA), /* DAT2 */
@@ -204,7 +203,7 @@ static uint32_t wifi_off_gpio_table[] = {
  * we use predefined value (sdio_vsn=2) here to initial sdio driver well
  */
 
-static struct embedded_sdio_data flyer_wifi_emb_data = {
+ static struct embedded_sdio_data flyer_wifi_emb_data = {
 	.cccr	= {
 		.sdio_vsn	= 2,
 		.multi_block	= 1,
@@ -214,7 +213,7 @@ static struct embedded_sdio_data flyer_wifi_emb_data = {
 		.high_speed	= 1,
 	},
 };
-
+ 
 static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
 
@@ -235,7 +234,6 @@ static unsigned int flyer_wifi_status(struct device *dev)
 {
 	return flyer_wifi_cd;
 }
-
 
 static unsigned int flyer_wifislot_type = MMC_TYPE_SDIO_WIFI;
 static struct mmc_platform_data flyer_wifi_data = {
@@ -277,7 +275,7 @@ int flyer_wifi_power(int on)
 				  ARRAY_SIZE(wifi_off_gpio_table));
 	}
 
-	gpio_set_value(FLYER_GPIO_WIFI_SHUTDOWN_N, on); /* WIFI_SHUTDOWN */
+	gpio_set_value(FLYER_GPIO_WIFI_EN, on); /* WIFI_SHUTDOWN */
 
 	mdelay(120);
 	return 0;
@@ -300,22 +298,17 @@ int __init flyer_init_mmc(unsigned int sys_rev)
 	/* SDC2: MoviNAND */
 	config_gpio_table(movinand_on_gpio_table,
 			  ARRAY_SIZE(movinand_on_gpio_table));
+			  
 #if 0
-	msm_add_sdcc(2, &flyer_movinand_data, 0, 0);
+	msm_add_sdcc(2, &flyer_movinand_data);
 #endif
-
 	/* initial WIFI_SHUTDOWN# */
-	id = PCOM_GPIO_CFG(FLYER_GPIO_WIFI_SHUTDOWN_N, 0, GPIO_OUTPUT,
+	id = PCOM_GPIO_CFG(FLYER_GPIO_WIFI_EN, 0, GPIO_OUTPUT,
 		GPIO_NO_PULL, GPIO_2MA),
 	msm_proc_comm(PCOM_RPC_GPIO_TLMM_CONFIG_EX, &id, 0);
-	gpio_set_value(FLYER_GPIO_WIFI_SHUTDOWN_N, 0);
+	gpio_set_value(FLYER_GPIO_WIFI_EN, 0);
 
 	msm_add_sdcc(3, &flyer_wifi_data);
-
-#if 0
-	register_msm_irq_mask(INT_SDC4_0);
-	register_msm_irq_mask(INT_SDC4_1);
-#endif
 
 #if 0
 	if (opt_disable_sdcard) {
@@ -332,10 +325,10 @@ int __init flyer_init_mmc(unsigned int sys_rev)
 	msm_add_sdcc(4, &flyer_sdslot_data,
 			MSM_GPIO_TO_INT(FLYER_SDMC_CD_N_TO_SYS),
 			IORESOURCE_IRQ_LOWEDGE | IORESOURCE_IRQ_HIGHEDGE);
+	printk(KERN_INFO "%s: %d\n", __func__, FLYER_SDMC_CD_N_TO_SYS);
 
 done:
 #endif
 
 	return 0;
 }
-

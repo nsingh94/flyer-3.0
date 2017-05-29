@@ -116,7 +116,6 @@
 #include <mach/htc_bdaddress.h>
 #endif
 
-int htc_get_usb_accessory_adc_level(uint32_t *buffer);
 #include <mach/cable_detect.h>
 
 #define XC 2
@@ -152,9 +151,7 @@ struct pm8xxx_gpio_init_info {
 
 int __init flyer_init_panel(void);
 
-static int board_ver;
 static unsigned int engineerid;
-unsigned long msm_fb_base;
 
 static int get_thermal_id(void)
 {
@@ -364,9 +361,8 @@ static struct platform_device htc_headset_microp = {
 
 /* HTC_HEADSET_GPIO Driver */
 static struct htc_headset_gpio_platform_data htc_headset_gpio_data = {
-    .hpin_gpio		= PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz),
+    .hpin_gpio			= PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz),
 	.key_enable_gpio	= 0,
-	.mic_select_gpio	= FLYER_AUD_MICPATH_SEL,
 };
 
 static struct platform_device htc_headset_gpio = {
@@ -379,8 +375,8 @@ static struct platform_device htc_headset_gpio = {
 
 /* HTC_HEADSET_PMIC Driver */
 static struct htc_headset_pmic_platform_data htc_headset_pmic_data = {
-	.hpin_gpio	= 0,
-	.hpin_irq	= MSM_GPIO_TO_INT(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz)),
+	.hpin_gpio	= PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz),
+	.hpin_irq	= 0,
 };
 
 static struct platform_device htc_headset_pmic = {
@@ -1133,11 +1129,6 @@ static int pm8058_pwm_enable(struct pwm_device *pwm, int ch, int on)
 	return rc;
 }
 
-static struct pm8xxx_vibrator_platform_data pm8058_vib_pdata = {
-       .initial_vibrate_ms  = 0,
-       .level_mV = 3000,
-       .max_timeout_ms = 15000,
-};
 static struct pm8058_pwm_pdata pm8058_pwm_data = {
 	.config         = pm8058_pwm_config,
 	.enable         = pm8058_pwm_enable,
@@ -1162,7 +1153,6 @@ static struct pm8058_platform_data pm8058_7x30_data = {
 	.gpio_pdata		= &pm8xxx_gpio_pdata,
 	.mpp_pdata		= &pm8xxx_mpp_pdata,
 	.pwm_pdata		= &pm8058_pwm_data,
-	.vibrator_pdata		= &pm8058_vib_pdata,
 };
 
 #ifdef CONFIG_MSM_SSBI
@@ -1177,6 +1167,7 @@ static struct msm_ssbi_platform_data msm7x30_ssbi_pm8058_pdata __devinitdata = {
 };
 #endif
 
+#ifdef CONFIG_MSM_CAMERA
 static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
 #ifdef CONFIG_S5K4E1GX
 	{
@@ -1198,7 +1189,6 @@ static int gCAM_RST_GPIO = FLYER_CAM_RST;
 static int gCAM2_PWN_GPIO = FLYER_CAM2_PWD;
 static int gCAM_GPIO_SEL = FLYER_CLK_SWITCH;
 
-#ifdef CONFIG_MSM_CAMERA
 static uint32_t camera_off_gpio_table[] = {
 	/* parallel CAMERA interfaces */
 PCOM_GPIO_CFG(FLYER_CAM_RST,  0, GPIO_OUTPUT, GPIO_PULL_DOWN, GPIO_2MA),
@@ -1406,7 +1396,7 @@ static int sensor_vreg_on(void)
 
 	/*camera power down*/
 #if 0
-	gpio_set_value(CAM_PWD, 1);
+	gpio_set_value(FLYER_CAM_PWD, 1);
 	udelay(200);
 #endif
 
@@ -1530,15 +1520,11 @@ struct msm_camera_device_platform_data camera_device_data = {
 static void flyer_maincam_clk_switch(void){
 	int rc = 0;
 	pr_info("[CAM] Doing clk switch (s5k4e1gx)\n");
-
-
 	rc = gpio_request(gCAM_GPIO_SEL, "s5k4e1gx");
-
 	if (rc < 0)
 		pr_err("[CAM] GPIO (%d) request fail\n", gCAM_GPIO_SEL);
 	else
 		gpio_direction_output(gCAM_GPIO_SEL, 0);
-
 	gpio_free(gCAM_GPIO_SEL);
 
 	return;
@@ -1547,16 +1533,13 @@ static void flyer_maincam_clk_switch(void){
 
 #ifdef CONFIG_S5K6AAFX
 static void flyer_seccam_clk_switch(void){
-
 	int rc = 0;
 	pr_info("[CAM] Doing clk switch (s5k6aafx)\n");
 	rc = gpio_request(gCAM_GPIO_SEL, "s5k6aafx");
-
 	if (rc < 0)
 		pr_err("[CAM] GPIO (%d) request fail\n", gCAM_GPIO_SEL);
 	else
 		gpio_direction_output(gCAM_GPIO_SEL, 1);
-
 	gpio_free(gCAM_GPIO_SEL);
 	return;
 }
@@ -2605,11 +2588,6 @@ struct platform_device msm_aictl_device = {
 	.resource = msm_aictl_resources,
 };
 
-struct platform_device htc_drm = {
-	.name = "htcdrm",
-	.id = 0,
-};
-
 struct platform_device msm_mi2s_device = {
 	.name = "mi2s",
 	.id   = 0,
@@ -2777,31 +2755,6 @@ static struct platform_device msm_device_adspdec = {
 		.platform_data = &msm_device_adspdec_database
 	},
 };
-
-#ifdef CONFIG_USB_G_ANDROID
-static struct android_usb_platform_data android_usb_pdata = {
-	.vendor_id	= 0x0BB4,
-	.product_id	= 0x0ce5,
-	.version	= 0x0100,
-	.product_name		= "Android Phone",
-	.manufacturer_name	= "HTC",
-	.num_products = ARRAY_SIZE(usb_products),
-	.products = usb_products,
-	.num_functions = ARRAY_SIZE(usb_functions_all),
-	.functions = usb_functions_all,
-	.fserial_init_string = "tty:modem,tty:autobot,tty:serial,tty:autobot",
-	.nluns = 1,
-};
-
-static struct platform_device android_usb_device = {
-	.name	= "android_usb",
-	.id		= -1,
-	.dev		= {
-		.platform_data = &android_usb_pdata,
-	},
-};
-
-#endif
 
 static struct i2c_board_info msm_marimba_board_info[] = {
 	{
@@ -2993,80 +2946,38 @@ static void __init msm_qsd_spi_init(void)
 	qsd_device_spi.dev.platform_data = &qsd_spi_pdata;
 }
 
-#define PM8058ADC_16BIT(adc) ((adc * 2200) / 65535) /* vref=2.2v, 16-bits resolution */
-int64_t flyer_get_usbid_adc(void)
-{
-	uint32_t adc_value = 0xffffffff;
-	htc_get_usb_accessory_adc_level(&adc_value);
-	adc_value = PM8058ADC_16BIT(adc_value);
-	return adc_value;
-}
-
-static const unsigned int get_flyer_gpio_usb_id_pin(void)
-{
-	return (system_rev >= XC) ? FLYER_GPIO_USB_ID_PIN_XC : FLYER_GPIO_USB_ID_PIN;
-}
-
-static uint32_t usb_ID_PIN_input_table[] = {
-	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_INPUT, GPIO_PULL_UP, GPIO_4MA),
-};
-
-static uint32_t usb_ID_PIN_ouput_table[] = {
-	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_4MA),
-};
-
-static uint32_t usb_ID_PIN_ouput_table_XC[] = {
-	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_4MA),
-};
-
-static uint32_t usb_ID_PIN_input_table_XC[] = {
-	PCOM_GPIO_CFG(FLYER_GPIO_USB_ID_PIN_XC, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_4MA),
-};
-
-void config_flyer_usb_id_gpios(bool output)
-{
-	if (system_rev >= XC) {
-		if (output) {
-			config_gpio_table(usb_ID_PIN_ouput_table_XC,
-				ARRAY_SIZE(usb_ID_PIN_ouput_table_XC));
-			gpio_set_value(FLYER_GPIO_USB_ID_PIN_XC, 1);
-		} else
-			config_gpio_table(usb_ID_PIN_input_table_XC,
-				ARRAY_SIZE(usb_ID_PIN_input_table_XC));
-	} else {
-		if (output) {
-			config_gpio_table(usb_ID_PIN_ouput_table,
-				ARRAY_SIZE(usb_ID_PIN_ouput_table));
-			gpio_set_value(FLYER_GPIO_USB_ID_PIN, 1);
-		} else
-			config_gpio_table(usb_ID_PIN_input_table,
-				ARRAY_SIZE(usb_ID_PIN_input_table));
-	}
-}
-
-static struct cable_detect_platform_data cable_detect_pdata = {
-	.detect_type = CABLE_TYPE_PMIC_ADC,
-	.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN,
-	.config_usb_id_gpios = config_flyer_usb_id_gpios,
-	.get_adc_cb		= flyer_get_usbid_adc,
-};
-
-static struct platform_device cable_detect_device = {
-	.name	= "cable_detect",
-	.id	= -1,
-	.dev	= {
-		.platform_data = &cable_detect_pdata,
-	},
-};
-
 #ifdef CONFIG_USB_EHCI_MSM_72K
 static void msm_hsusb_vbus_power(unsigned phy_info, int on)
 {
+	int rc;
 	static int vbus_is_on;
+	struct pm8xxx_gpio_init_info usb_vbus = {
+		PM8058_GPIO_PM_TO_SYS(36),
+		{
+			.direction      = PM_GPIO_DIR_OUT,
+			.pull           = PM_GPIO_PULL_NO,
+			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
+			.output_value   = 1,
+			.vin_sel        = 2,
+			.out_strength   = PM_GPIO_STRENGTH_MED,
+			.function       = PM_GPIO_FUNC_NORMAL,
+			.inv_int_pol    = 0,
+		},
+	};
 
 	/* If VBUS is already on (or off), do nothing. */
 	if (unlikely(on == vbus_is_on))
-	return;
+		return;
+
+	if (on) {
+          rc = pm8xxx_gpio_config(PM8058_GPIO_PM_TO_SYS(usb_vbus.gpio), &usb_vbus.config);
+		if (rc) {
+			pr_err("%s PMIC GPIO 36 write failed\n", __func__);
+			return;
+		}
+	} else {
+		gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(36), 0);
+	}
 
 	vbus_is_on = on;
 }
@@ -3081,20 +2992,48 @@ static struct msm_usb_host_platform_data msm_usb_host_pdata = {
 #if defined(CONFIG_USB_GADGET_MSM_72K) || defined(CONFIG_USB_EHCI_MSM)
 static struct msm_otg_platform_data msm_otg_pdata = {
 #ifdef CONFIG_USB_EHCI_MSM_72K
-	.vbus_power = msm_hsusb_vbus_power,
+	.vbus_power		= msm_hsusb_vbus_power,
 #endif
 	.pemp_level		= PRE_EMPHASIS_WITH_20_PERCENT,
-	.cdr_autoreset		= CDR_AUTO_RESET_DISABLE,
+	.cdr_autoreset	= CDR_AUTO_RESET_DISABLE,
 	.drv_ampl		= HS_DRV_AMPLITUDE_DEFAULT,
 	.se1_gating		= SE1_GATING_DISABLE,
 };
 #endif
 
 #ifdef CONFIG_USB_G_ANDROID
-static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0D, 0x1, 0x10, -1 };
+static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0E, 0x1, 0x11, -1 };
 static struct msm_hsusb_gadget_platform_data msm_gadget_pdata = {
 	.phy_init_seq		= phy_init_seq,
 	.is_phy_status_timer_on = 1,
+};
+
+static const unsigned int get_flyer_gpio_usb_id_pin(void)
+{
+	return (system_rev >= XC) ? FLYER_GPIO_USB_ID_PIN_XC : FLYER_GPIO_USB_ID_PIN;
+}
+
+static struct android_usb_platform_data android_usb_pdata = {
+	.vendor_id	= 0x0BB4,
+	.product_id	= 0x0ca9,
+	.version	= 0x0100,
+	.product_name		= "Android Phone",
+	.manufacturer_name	= "HTC",
+	.num_products = ARRAY_SIZE(usb_products),
+	.products = usb_products,
+	.num_functions = ARRAY_SIZE(usb_functions_all),
+	.functions = usb_functions_all,
+	.fserial_init_string = "tty:modem,tty,tty:serial",
+	.nluns = 2,
+	.usb_id_pin_gpio = FLYER_GPIO_USB_ID_PIN,
+};
+
+static struct platform_device android_usb_device = {
+	.name	= "android_usb",
+	.id		= -1,
+	.dev		= {
+		.platform_data = &android_usb_pdata,
+	},
 };
 
 void flyer_add_usb_devices(void)
@@ -3103,9 +3042,10 @@ void flyer_add_usb_devices(void)
 	android_usb_pdata.products[0].product_id =
 		android_usb_pdata.product_id;
 
-	cable_detect_pdata.usb_id_pin_gpio = get_flyer_gpio_usb_id_pin();
+	android_usb_pdata.usb_id_pin_gpio = get_flyer_gpio_usb_id_pin();
 
-	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;	
+	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
+
 #if defined(CONFIG_USB_OTG)
 	msm_device_otg.dev.platform_data = &msm_otg_pdata;
 	platform_device_register(&msm_device_otg);
@@ -3114,6 +3054,13 @@ void flyer_add_usb_devices(void)
 	platform_device_register(&android_usb_device);
 }
 #endif
+
+static int __init board_serialno_setup(char *serialno)
+{
+	android_usb_pdata.serial_number = serialno;
+	return 1;
+}
+__setup("androidboot.serialno=", board_serialno_setup);
 
 static struct resource msm_fb_resources[] = {
 	{
@@ -3790,8 +3737,6 @@ static struct platform_device *devices[] __initdata = {
 #endif
 
         &gpio_leds,
-		&cable_detect_device,
-        &htc_drm, //Might need to remove
 };
 
 static struct msm_gpio msm_i2c_gpios_hw[] = {
@@ -4361,12 +4306,6 @@ static void flyer_reset(void)
 	gpio_set_value(FLYER_GPIO_PS_HOLD, 0);
 }
 
-static int __init board_serialno_setup(char *serialno)
-{
-	android_usb_pdata.serial_number = serialno;
-	return 1;
-}
-
 #ifdef CONFIG_MDP4_HW_VSYNC
 static void flyer_te_gpio_config(void)
 {
@@ -4377,7 +4316,6 @@ static void flyer_te_gpio_config(void)
 }
 #endif
 
-__setup("androidboot.serialno=", board_serialno_setup);
 static void __init flyer_init(void)
 {
 	int rc = 0;
@@ -4425,6 +4363,7 @@ static void __init flyer_init(void)
 	msm_otg_pdata.swfi_latency =
 	msm_pm_data
 	[MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT].latency;
+	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;	
 #endif
 #endif
 
@@ -4502,8 +4441,6 @@ static void __init flyer_init(void)
 	printk(KERN_NOTICE "Boot Reason = 0x%02x\n", boot_reason);
 
 	i2c_register_board_info(0, i2c_devices_microp, ARRAY_SIZE(i2c_devices_microp));
-	if (board_ver >= 30 && board_ver < 43)
-		htc_headset_gpio_data.mic_select_gpio = FLYER_AUD_MICPATH_SEL_XC;	
 
 	if (system_rev <= 1) {
 		i2c_register_board_info(0, i2c_compass_devices_XA_XB, ARRAY_SIZE(i2c_compass_devices_XA_XB));
@@ -4585,6 +4522,10 @@ static void __init flyer_init(void)
 #endif
 	flyer_init_panel();
 	flyer_wifi_init();
+	
+	/* for Vibrator XC board */
+	if (system_rev >= 2)
+		msm_init_pmic_vibrator(3000);
 }
 
 static unsigned pmem_sf_size = MSM_PMEM_SF_SIZE;
@@ -4771,6 +4712,7 @@ static void __init flyer_reserve(void)
 	msm_reserve();
 }
 
+unsigned long msm_fb_base;
 static void __init flyer_allocate_memory_regions(void)
 {
 	void *addr;
