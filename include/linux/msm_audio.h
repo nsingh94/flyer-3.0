@@ -1,6 +1,7 @@
 /* include/linux/msm_audio.h
  *
  * Copyright (C) 2008 Google, Inc.
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -22,6 +23,7 @@
 
 #include <linux/types.h>
 #include <linux/ioctl.h>
+#include <asm/sizes.h>
 
 /* PCM Audio */
 
