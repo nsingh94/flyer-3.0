@@ -20,7 +20,13 @@
 #define S5K6AAFX_H
 
 #include <linux/types.h>
+#ifdef CONFIG_MSM_CAMERA_8X60
+#include <mach/camera-8x60.h>
+#elif defined(CONFIG_MSM_CAMERA_7X30)
+#include <mach/camera-7x30.h>
+#else
 #include <mach/camera.h>
+#endif
 
 /* S5K6AAFX Registers and their values */
 /* Sensor Core Registers */

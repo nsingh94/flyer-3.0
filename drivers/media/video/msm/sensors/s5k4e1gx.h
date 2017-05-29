@@ -20,7 +20,13 @@
 #define CAMSENSOR_S5K4E1GX
 
 #include <linux/types.h>
+#ifdef CONFIG_MSM_CAMERA_8X60
+#include <mach/camera-8x60.h>
+#elif defined(CONFIG_MSM_CAMERA_7X30)
+#include <mach/camera-7x30.h>
+#else
 #include <mach/camera.h>
+#endif
 
 struct s5k4e1gx_i2c_reg_conf {
 	unsigned short waddr;

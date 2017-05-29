@@ -4415,9 +4415,20 @@ static void __init flyer_init(void)
 	i2c_register_board_info(2, msm_i2c_gsbi7_timpani_info,
 			ARRAY_SIZE(msm_i2c_gsbi7_timpani_info));
 
-
 	i2c_register_board_info(4 /* QUP ID */, msm_camera_boardinfo,
 			ARRAY_SIZE(msm_camera_boardinfo));
+
+	i2c_register_board_info(0, i2c_devices_microp, ARRAY_SIZE(i2c_devices_microp));
+
+	if (system_rev <= 1) {
+		i2c_register_board_info(0, i2c_compass_devices_XA_XB, ARRAY_SIZE(i2c_compass_devices_XA_XB));
+	} else if (system_rev == 2) {
+		i2c_register_board_info(0, i2c_compass_devices_XC, ARRAY_SIZE(i2c_compass_devices_XC));
+	} else if (system_rev == 3) {
+		i2c_register_board_info(0, i2c_compass_devices_XD, ARRAY_SIZE(i2c_compass_devices_XD));
+	} else {
+		i2c_register_board_info(0, i2c_compass_devices_VER_A, ARRAY_SIZE(i2c_compass_devices_VER_A));
+	}
 
 #ifdef CONFIG_I2C_SSBI
 #if 0
@@ -4440,22 +4451,11 @@ static void __init flyer_init(void)
 		(smem_get_entry(SMEM_POWER_ON_STATUS_INFO, &smem_size));
 	printk(KERN_NOTICE "Boot Reason = 0x%02x\n", boot_reason);
 
-	i2c_register_board_info(0, i2c_devices_microp, ARRAY_SIZE(i2c_devices_microp));
-
-	if (system_rev <= 1) {
-		i2c_register_board_info(0, i2c_compass_devices_XA_XB, ARRAY_SIZE(i2c_compass_devices_XA_XB));
-	} else if (system_rev == 2) {
-		i2c_register_board_info(0, i2c_compass_devices_XC, ARRAY_SIZE(i2c_compass_devices_XC));
-	} else if (system_rev == 3) {
-		i2c_register_board_info(0, i2c_compass_devices_XD, ARRAY_SIZE(i2c_compass_devices_XD));
-	} else {
-		i2c_register_board_info(0, i2c_compass_devices_VER_A, ARRAY_SIZE(i2c_compass_devices_VER_A));
-	}
-
 	if (system_rev >= 2) {
 		flyer_ts_ntrig_data[0].spi_enable = FLYER_GPIO_SPI_ENABLE_XC;
 	}
 
+#ifdef CONFIG_MSM_CAMERA
 	if (system_rev >= 3) {/* for Camera XD board */
 		pr_info("[camera] XD GPIO pin changed\n");
 		gCAM_GPIO_SEL = FLYER_CLK_SWITCH_XC;
@@ -4474,6 +4474,7 @@ static void __init flyer_init(void)
 #ifdef CONFIG_S5K6AAFX
 	msm_camera_sensor_s5k6aafx_data.sensor_pwd = gCAM2_PWN_GPIO;
 	msm_camera_sensor_s5k6aafx_data.cam_select_pin = gCAM_GPIO_SEL;
+#endif
 #endif
 
 	if (system_rev == 2) {/* for Led XC board */

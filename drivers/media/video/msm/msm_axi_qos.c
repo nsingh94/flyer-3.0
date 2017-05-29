@@ -12,7 +12,13 @@
  */
 
 #include <linux/clk.h>
+#ifdef CONFIG_MSM_CAMERA_8X60
+#include <mach/camera-8x60.h>
+#elif defined(CONFIG_MSM_CAMERA_7X30)
+#include <mach/camera-7x30.h>
+#else
 #include <mach/camera.h>
+#endif
 #define MSM_AXI_QOS_NAME "msm_camera"
 
 static struct clk *ebi1_clk;
