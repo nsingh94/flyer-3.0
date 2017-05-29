@@ -344,16 +344,16 @@ static struct bma150_platform_data flyer_g_sensor_pdata = {
 
 /* HTC_HEADSET_MICROP Driver */
 static struct htc_headset_microp_platform_data htc_headset_microp_data = {
-	.remote_int		= 1 << 13,
-	.remote_irq		= MSM_uP_TO_INT(13),
+	.remote_int			= 1 << 13,
+	.remote_irq			= MSM_uP_TO_INT(13),
 	.remote_enable_pin	= 0,
 	.adc_channel		= 0x01,
-	.adc_remote		= {0, 33, 43, 73, 110, 172},
+	.adc_remote			= {0, 33, 43, 73, 110, 172},
 };
 
 static struct platform_device htc_headset_microp = {
 	.name	= "HTC_HEADSET_MICROP",
-	.id	= -1,
+	.id		= -1,
 	.dev	= {
 		.platform_data	= &htc_headset_microp_data,
 	},
@@ -367,7 +367,7 @@ static struct htc_headset_gpio_platform_data htc_headset_gpio_data = {
 
 static struct platform_device htc_headset_gpio = {
 	.name	= "HTC_HEADSET_GPIO",
-	.id	= -1,
+	.id		= -1,
 	.dev	= {
 		.platform_data	= &htc_headset_gpio_data,
 	},
@@ -375,13 +375,13 @@ static struct platform_device htc_headset_gpio = {
 
 /* HTC_HEADSET_PMIC Driver */
 static struct htc_headset_pmic_platform_data htc_headset_pmic_data = {
-	.hpin_gpio	= PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz),
-	.hpin_irq	= 0,
+	.hpin_gpio	= 0,
+	.hpin_irq	= MSM_GPIO_TO_INT(PM8058_GPIO_PM_TO_SYS(FLYER_AUD_HP_DETz)),
 };
 
 static struct platform_device htc_headset_pmic = {
 	.name	= "HTC_HEADSET_PMIC",
-	.id	= -1,
+	.id		= -1,
 	.dev	= {
 		.platform_data	= &htc_headset_pmic_data,
 	},
@@ -396,7 +396,7 @@ static struct htc_headset_misc_platform_data htc_headset_misc_data = {
 
 static struct platform_device htc_headset_misc = {
 	.name	= "HTC_HEADSET_MISC",
-	.id	= -1,
+	.id		= -1,
 	.dev	= {
 		.platform_data	= &htc_headset_misc_data,
 	},
@@ -405,8 +405,8 @@ static struct platform_device htc_headset_misc = {
 /* HTC_HEADSET_MGR Driver */
 static struct platform_device *headset_devices[] = {
 	&htc_headset_microp,
-	&htc_headset_gpio,
 	&htc_headset_misc,
+	&htc_headset_gpio,
 	&htc_headset_pmic,
 	/* Please put the headset detection driver on the last */
 };
@@ -431,34 +431,34 @@ static struct headset_adc_config htc_headset_mgr_config[] = {
 
 static struct htc_headset_mgr_platform_data htc_headset_mgr_data = {
 	.headset_devices_num	= ARRAY_SIZE(headset_devices),
-	.headset_devices	= headset_devices,
-	.headset_config_num	= ARRAY_SIZE(htc_headset_mgr_config),
-	.headset_config		= htc_headset_mgr_config,
+	.headset_devices		= headset_devices,
+	.headset_config_num		= ARRAY_SIZE(htc_headset_mgr_config),
+	.headset_config			= htc_headset_mgr_config,
 };
 
 static struct platform_device microp_devices[] = {
 	{
-		.name = "lightsensor_microp",
-		.dev = {
+		.name	= "lightsensor_microp",
+		.dev	= {
 			.platform_data = &lightsensor_data,
 		},
 	},
 	{
-		.name = "leds-microp",
-		.id = -1,
-		.dev = {
+		.name 	= "leds-microp",
+		.id		= -1,
+		.dev	= {
 			.platform_data = &microp_leds_data,
 		},
 	},
 	{
-		.name = BMA150_G_SENSOR_NAME,
-		.dev = {
+		.name	= BMA150_G_SENSOR_NAME,
+		.dev	= {
 			.platform_data = &flyer_g_sensor_pdata,
 		},
 	},
 	{
 		.name	= "HTC_HEADSET_MGR",
-		.id	= -1,
+		.id		= -1,
 		.dev	= {
 			.platform_data	= &htc_headset_mgr_data,
 		},
